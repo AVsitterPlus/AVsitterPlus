@@ -685,10 +685,10 @@ state running
 
                 if (index > -1)
                 {
-                        string new_pose = llList2String(data,1);
-                        string original_pose = llList2String(CAPTIVE_POSES_FLAGS, index - 1);
                         if (llList2Integer(CAPTIVE_POSES_FLAGS, index) == 2)
                         {
+                                                string new_pose = llList2String(data,1);
+                                                string original_pose = llList2String(CAPTIVE_POSES_FLAGS, index - 1);
                                                 if (new_pose != original_pose && original_pose != "")
                                                 {
                                                         // reapply the correct previous pose
