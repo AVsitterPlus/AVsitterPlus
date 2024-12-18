@@ -1191,7 +1191,7 @@ default
                             SITTER_INFO = llList2List(parts, 1, 99999);
                         }
                     }
-                    return;
+                    jump end;
                 }
                 if (command == "MTYPE")
                 {
@@ -1201,82 +1201,82 @@ default
                     {
                         llPassTouches(TRUE);
                     }
-                    return;
+                    jump end;
                 }
                 if (command == "ROLES")
                 {
                     RLVDesignations = (string)parts;
-                    return;
+                    jump end;
                 }
                 if (command == "ETYPE")
                 {
                     ETYPE = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "SELECT")
                 {
                     SELECT = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "WARN")
                 {
                     WARN = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "TEXT")
                 {
                     CUSTOM_TEXT = llDumpList2String(llParseStringKeepNulls(part0, ["\\n"], []), "\n");
-                    return;
+                    jump end;
                 }
                 if (command == "SWAP")
                 {
                     SWAP = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "AMENU")
                 {
                     AMENU = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "HELPER")
                 {
                     OLD_HELPER_METHOD = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "SET")
                 {
                     SET = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "KFM")
                 {
                     HASKEYFRAME = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "LROT")
                 {
                     REFERENCE = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "BRAND")
                 {
                     BRAND = part0;
-                    return;
+                    jump end;
                 }
                 if (command == "DFLT")
                 {
                     DFLT = (integer)part0;
-                    return;
+                    jump end;
                 }
                 if (command == "ONSIT")
                 {
                     onSit = part0;
-                    return;
+                    jump end;
                 }
                 if (command == "ADJUST")
                 {
                     ADJUST_MENU = parts;
-                    return;
+                    jump end;
                 }
                 if (reading_notecard_section)
                 {
@@ -1341,6 +1341,7 @@ default
                     }
                 }
 
+                @end;
                 data = llGetNotecardLineSync(notecard_name, ++reused_variable);
             }
 
