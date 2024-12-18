@@ -69,6 +69,7 @@ integer reading_notecard_section;
 integer notecard_lines;
 key reused_key;
 integer reused_variable;
+integer notecard_line = -1;
 integer my_sittarget;
 integer original_my_sittarget;
 list SITTERS_SITTARGETS;
@@ -451,6 +452,226 @@ end_sitter()
     }
 }
 
+handle_notecard_line(string data)
+{
+    while (data != NAK)
+    {
+        if (data == EOF)
+        {
+            if (SCRIPT_CHANNEL)
+            {
+                sittargets();
+            }
+            else
+            {
+                llSetText("", <1,1,1>, 1);
+                llMessageLinked(LINK_SET, 90150, "", ""); // 90150=ask other AVsitA scripts to place their sittargets again
+            }
+            llMessageLinked(LINK_THIS, 90302, (string)SCRIPT_CHANNEL, llDumpList2String([llGetListLength(SITTERS), llDumpList2String(SITTER_INFO, SEP), SET, MTYPE, ETYPE, SWAP, FIRST_POSENAME, BRAND, CUSTOM_TEXT, llDumpList2String(ADJUST_MENU, SEP), SELECT, AMENU & 3, OLD_HELPER_METHOD, RLVDesignations, onSit], "|")); // 90302=send notecard settings to AVsitB
+            reused_variable = (llGetFreeMemory() - 5000) / 100;
+            notecard_line = -1;
+            return;
+        }
+        if (notecard_lines)
+        {
+            llSetText("Loading " + (string)(notecard_line * 100 / notecard_lines) + "%", <1,1,0>, 1);
+        }
+
+        data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
+        data = llStringTrim(data, STRING_TRIM_HEAD);
+        string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+        list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
+        string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
+        string part1;
+        if (llGetListLength(parts) > 1)
+        {
+            part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, 99999), SEP), STRING_TRIM);
+        }
+        if (command == "SITTER")
+        {
+            reading_notecard_section = FALSE;
+            if (llList2String(parts, 2) == "M")
+            {
+                GENDERS += 1;
+            }
+            else if (llList2String(parts, 2) == "F")
+            {
+                GENDERS += 0;
+            }
+            else
+            {
+                GENDERS += -1;
+            }
+            if ((integer)part0 == SCRIPT_CHANNEL)
+            {
+                reading_notecard_section = TRUE;
+                if (llGetListLength(parts) > 1)
+                {
+                    SITTER_INFO = llList2List(parts, 1, 99999);
+                }
+            }
+            jump end;
+        }
+        if (command == "MTYPE")
+        {
+            MTYPE = (integer)part0;
+            llPassTouches(FALSE);
+            if (MTYPE > 2)
+            {
+                llPassTouches(TRUE);
+            }
+            jump end;
+        }
+        if (command == "ROLES")
+        {
+            RLVDesignations = (string)parts;
+            jump end;
+        }
+        if (command == "ETYPE")
+        {
+            ETYPE = (integer)part0;
+            jump end;
+        }
+        if (command == "SELECT")
+        {
+            SELECT = (integer)part0;
+            jump end;
+        }
+        if (command == "WARN")
+        {
+            WARN = (integer)part0;
+            jump end;
+        }
+        if (command == "TEXT")
+        {
+            CUSTOM_TEXT = llDumpList2String(llParseStringKeepNulls(part0, ["\\n"], []), "\n");
+            jump end;
+        }
+        if (command == "SWAP")
+        {
+            SWAP = (integer)part0;
+            jump end;
+        }
+        if (command == "AMENU")
+        {
+            AMENU = (integer)part0;
+            jump end;
+        }
+        if (command == "HELPER")
+        {
+            OLD_HELPER_METHOD = (integer)part0;
+            jump end;
+        }
+        if (command == "SET")
+        {
+            SET = (integer)part0;
+            jump end;
+        }
+        if (command == "KFM")
+        {
+            HASKEYFRAME = (integer)part0;
+            jump end;
+        }
+        if (command == "LROT")
+        {
+            REFERENCE = (integer)part0;
+            jump end;
+        }
+        if (command == "BRAND")
+        {
+            BRAND = part0;
+            jump end;
+        }
+        if (command == "DFLT")
+        {
+            DFLT = (integer)part0;
+            jump end;
+        }
+        if (command == "ONSIT")
+        {
+            onSit = part0;
+            jump end;
+        }
+        if (command == "ADJUST")
+        {
+            ADJUST_MENU = parts;
+            jump end;
+        }
+        if (reading_notecard_section)
+        {
+            if (llGetSubString(data, 0, 0) == "{")
+            {
+                command = llStringTrim(llGetSubString(data, 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
+                parts = llParseStringKeepNulls(llDumpList2String(llParseString2List(llGetSubString(data, llSubStringIndex(data, "}") + 1, 99999), [" "], [""]), ""), ["<"], []);
+                string pos = "<" + llList2String(parts, 1);
+                string rot = "<" + llList2String(parts, 2);
+                if (command == FIRST_POSENAME || "P:" + command == FIRST_POSENAME)
+                {
+                    FIRST_POSITION = DEFAULT_POSITION = CURRENT_POSITION = (vector)pos;
+                    FIRST_ROTATION = DEFAULT_ROTATION = CURRENT_ROTATION = (vector)rot;
+                }
+                llMessageLinked(LINK_THIS, 90301, (string)SCRIPT_CHANNEL, command + "|" + pos + "|" + rot); // 90301=send update to AVsitB
+                return;
+            }
+            else
+            {
+                part0 = llGetSubString(part0, 0, 22);
+                if (command == "SEQUENCE")
+                {
+                    command = "BUTTON"; // Act as a button
+                    part1 = "90210"; // Link code: Trigger sequence
+                }
+                if (command == "POSE" || command == "SYNC" || command == "MENU" || command == "TOMENU" || command == "BUTTON")
+                {
+                    if (command != "SYNC")
+                    {
+                        part0 = llGetSubString(command, 0, 0) + ":" + part0;
+                    }
+                    if (command == "MENU" || command == "TOMENU")
+                    {
+                        part0 += "*";
+                    }
+                    if (command == "POSE" || command == "SYNC")
+                    {
+                        if (FIRST_POSENAME == "")
+                        {
+                            FIRST_POSENAME = CURRENT_POSE_NAME = part0;
+                            FIRST_ANIMATION_SEQUENCE = CURRENT_ANIMATION_SEQUENCE = part1;
+                        }
+                        if (llList2String(parts, -1) == "M")
+                        {
+                            MALE_POSENAME = part0;
+                            FIRST_MALE_ANIMATION_SEQUENCE = part1;
+                        }
+                        else if (llList2String(parts, -1) == "F")
+                        {
+                            FEMALE_POSENAME = part0;
+                            FIRST_FEMALE_ANIMATION_SEQUENCE = part1;
+                        }
+                    }
+                    // Don't generate empty buttons (issue #60)
+                    if (part0 == "B:")
+                        part0 = "B: ";
+                    if (command == "BUTTON" && part1 == "")
+                    {
+                        part1 = "90200"; // default to rez prop
+                    }
+                    llMessageLinked(LINK_THIS, 90300, (string)SCRIPT_CHANNEL, part0 + "|" + part1); // 90300=update AVsitB
+                    return;
+                }
+            }
+        }
+
+        @end;
+        data = llGetNotecardLineSync(notecard_name, ++notecard_line);
+    }
+
+    if (data == NAK)
+    {
+        notecard_query = llGetNotecardLine(notecard_name, notecard_line);
+    }
+}
+
 default
 {
     state_entry()
@@ -496,7 +717,8 @@ default
                 // Out() inlined here:
                 llOwnerSay(llGetScriptName() + "[" + version + "] " + "Loading " + notecard_name + "...");
             }
-            notecard_query = llGetNotecardLine(notecard_name, reused_variable);
+            notecard_line = 0;
+            notecard_query = llGetNotecardLine(notecard_name, notecard_line);
         }
     }
 
@@ -852,6 +1074,12 @@ default
                 speed_index = llList2Integer(data, 5);
                 apply_current_anim(llList2Integer(data, 4));
                 set_sittarget();
+                if(notecard_line != -1) handle_notecard_line(llGetNotecardLineSync(notecard_name, ++notecard_line));
+                return;
+            }
+            if (num == 99999)
+            {
+                if(notecard_line != -1) handle_notecard_line(llGetNotecardLineSync(notecard_name, ++notecard_line));
                 return;
             }
             if (num == 90057) // 90057=helper moved, update position
@@ -1136,219 +1364,7 @@ default
     {
         if (query_id == notecard_query)
         {
-            while (data != NAK)
-            {
-                if (data == EOF)
-                {
-                    if (SCRIPT_CHANNEL)
-                    {
-                        sittargets();
-                    }
-                    else
-                    {
-                        llSetText("", <1,1,1>, 1);
-                        llMessageLinked(LINK_SET, 90150, "", ""); // 90150=ask other AVsitA scripts to place their sittargets again
-                    }
-                    llMessageLinked(LINK_THIS, 90302, (string)SCRIPT_CHANNEL, llDumpList2String([llGetListLength(SITTERS), llDumpList2String(SITTER_INFO, SEP), SET, MTYPE, ETYPE, SWAP, FIRST_POSENAME, BRAND, CUSTOM_TEXT, llDumpList2String(ADJUST_MENU, SEP), SELECT, AMENU & 3, OLD_HELPER_METHOD, RLVDesignations, onSit], "|")); // 90302=send notecard settings to AVsitB
-                    reused_variable = (llGetFreeMemory() - 5000) / 100;
-                    return;
-                }
-                if (notecard_lines)
-                {
-                    llSetText("Loading " + (string)(reused_variable * 100 / notecard_lines) + "%", <1,1,0>, 1);
-                }
-
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
-                data = llStringTrim(data, STRING_TRIM_HEAD);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
-                string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
-                string part1;
-                if (llGetListLength(parts) > 1)
-                {
-                    part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, 99999), SEP), STRING_TRIM);
-                }
-                if (command == "SITTER")
-                {
-                    reading_notecard_section = FALSE;
-                    if (llList2String(parts, 2) == "M")
-                    {
-                        GENDERS += 1;
-                    }
-                    else if (llList2String(parts, 2) == "F")
-                    {
-                        GENDERS += 0;
-                    }
-                    else
-                    {
-                        GENDERS += -1;
-                    }
-                    if ((integer)part0 == SCRIPT_CHANNEL)
-                    {
-                        reading_notecard_section = TRUE;
-                        if (llGetListLength(parts) > 1)
-                        {
-                            SITTER_INFO = llList2List(parts, 1, 99999);
-                        }
-                    }
-                    jump end;
-                }
-                if (command == "MTYPE")
-                {
-                    MTYPE = (integer)part0;
-                    llPassTouches(FALSE);
-                    if (MTYPE > 2)
-                    {
-                        llPassTouches(TRUE);
-                    }
-                    jump end;
-                }
-                if (command == "ROLES")
-                {
-                    RLVDesignations = (string)parts;
-                    jump end;
-                }
-                if (command == "ETYPE")
-                {
-                    ETYPE = (integer)part0;
-                    jump end;
-                }
-                if (command == "SELECT")
-                {
-                    SELECT = (integer)part0;
-                    jump end;
-                }
-                if (command == "WARN")
-                {
-                    WARN = (integer)part0;
-                    jump end;
-                }
-                if (command == "TEXT")
-                {
-                    CUSTOM_TEXT = llDumpList2String(llParseStringKeepNulls(part0, ["\\n"], []), "\n");
-                    jump end;
-                }
-                if (command == "SWAP")
-                {
-                    SWAP = (integer)part0;
-                    jump end;
-                }
-                if (command == "AMENU")
-                {
-                    AMENU = (integer)part0;
-                    jump end;
-                }
-                if (command == "HELPER")
-                {
-                    OLD_HELPER_METHOD = (integer)part0;
-                    jump end;
-                }
-                if (command == "SET")
-                {
-                    SET = (integer)part0;
-                    jump end;
-                }
-                if (command == "KFM")
-                {
-                    HASKEYFRAME = (integer)part0;
-                    jump end;
-                }
-                if (command == "LROT")
-                {
-                    REFERENCE = (integer)part0;
-                    jump end;
-                }
-                if (command == "BRAND")
-                {
-                    BRAND = part0;
-                    jump end;
-                }
-                if (command == "DFLT")
-                {
-                    DFLT = (integer)part0;
-                    jump end;
-                }
-                if (command == "ONSIT")
-                {
-                    onSit = part0;
-                    jump end;
-                }
-                if (command == "ADJUST")
-                {
-                    ADJUST_MENU = parts;
-                    jump end;
-                }
-                if (reading_notecard_section)
-                {
-                    if (llGetSubString(data, 0, 0) == "{")
-                    {
-                        command = llStringTrim(llGetSubString(data, 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
-                        parts = llParseStringKeepNulls(llDumpList2String(llParseString2List(llGetSubString(data, llSubStringIndex(data, "}") + 1, 99999), [" "], [""]), ""), ["<"], []);
-                        string pos = "<" + llList2String(parts, 1);
-                        string rot = "<" + llList2String(parts, 2);
-                        if (command == FIRST_POSENAME || "P:" + command == FIRST_POSENAME)
-                        {
-                            FIRST_POSITION = DEFAULT_POSITION = CURRENT_POSITION = (vector)pos;
-                            FIRST_ROTATION = DEFAULT_ROTATION = CURRENT_ROTATION = (vector)rot;
-                        }
-                        llMessageLinked(LINK_THIS, 90301, (string)SCRIPT_CHANNEL, command + "|" + pos + "|" + rot); // 90301=send update to AVsitB
-                    }
-                    else
-                    {
-                        part0 = llGetSubString(part0, 0, 22);
-                        if (command == "SEQUENCE")
-                        {
-                            command = "BUTTON"; // Act as a button
-                            part1 = "90210"; // Link code: Trigger sequence
-                        }
-                        if (command == "POSE" || command == "SYNC" || command == "MENU" || command == "TOMENU" || command == "BUTTON")
-                        {
-                            if (command != "SYNC")
-                            {
-                                part0 = llGetSubString(command, 0, 0) + ":" + part0;
-                            }
-                            if (command == "MENU" || command == "TOMENU")
-                            {
-                                part0 += "*";
-                            }
-                            if (command == "POSE" || command == "SYNC")
-                            {
-                                if (FIRST_POSENAME == "")
-                                {
-                                    FIRST_POSENAME = CURRENT_POSE_NAME = part0;
-                                    FIRST_ANIMATION_SEQUENCE = CURRENT_ANIMATION_SEQUENCE = part1;
-                                }
-                                if (llList2String(parts, -1) == "M")
-                                {
-                                    MALE_POSENAME = part0;
-                                    FIRST_MALE_ANIMATION_SEQUENCE = part1;
-                                }
-                                else if (llList2String(parts, -1) == "F")
-                                {
-                                    FEMALE_POSENAME = part0;
-                                    FIRST_FEMALE_ANIMATION_SEQUENCE = part1;
-                                }
-                            }
-                            // Don't generate empty buttons (issue #60)
-                            if (part0 == "B:")
-                                part0 = "B: ";
-                            if (command == "BUTTON" && part1 == "")
-                            {
-                                part1 = "90200"; // default to rez prop
-                            }
-                            llMessageLinked(LINK_THIS, 90300, (string)SCRIPT_CHANNEL, part0 + "|" + part1); // 90300=update AVsitB
-                        }
-                    }
-                }
-
-                @end;
-                data = llGetNotecardLineSync(notecard_name, ++reused_variable);
-            }
-
-            if (data == NAK)
-            {
-                notecard_query = llGetNotecardLine(notecard_name, reused_variable);
-            }
+            handle_notecard_line(data);
         }
 
         if (query_id == reused_key)
