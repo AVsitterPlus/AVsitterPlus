@@ -571,10 +571,7 @@ default
                     send_anim_info(TRUE);
                     memory();
                 }
-                else
-                {
-                    llMessageLinked(LINK_THIS, 99999, (string)SCRIPT_CHANNEL, "");
-                }
+
                 return;
             }
             if (num == 90301)
@@ -597,14 +594,6 @@ default
                     {
                         send_anim_info(FALSE);
                     }
-                    else
-                    {
-                        llMessageLinked(LINK_THIS, 99999, (string)SCRIPT_CHANNEL, "");
-                    }
-                }
-                else
-                {
-                    llMessageLinked(LINK_THIS, 99999, (string)SCRIPT_CHANNEL, "");
                 }
                 return;
             }

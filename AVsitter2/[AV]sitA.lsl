@@ -70,6 +70,7 @@ integer notecard_lines;
 key reused_key;
 integer reused_variable;
 integer notecard_line = -1;
+integer awaiting_sensor;
 integer my_sittarget;
 integer original_my_sittarget;
 list SITTERS_SITTARGETS;
@@ -93,6 +94,12 @@ Out(integer level, string out)
     {
         llOwnerSay(llGetScriptName() + "[" + version + "] " + out);
     }
+}
+
+sensor_timer(float t)
+{
+    if(t == 0.0) llSensorRemove();
+    else         llSensorRepeat("", llGetKey(), PASSIVE, 0.1, PI, t);
 }
 
 list order_buttons(list buttons)
@@ -454,6 +461,7 @@ end_sitter()
 
 handle_notecard_line(string data)
 {
+    awaiting_sensor = FALSE;
     while (data != NAK)
     {
         if (data == EOF)
@@ -464,10 +472,12 @@ handle_notecard_line(string data)
             }
             else
             {
-                llSetText("", <1,1,1>, 1);
                 llMessageLinked(LINK_SET, 90150, "", ""); // 90150=ask other AVsitA scripts to place their sittargets again
             }
+            llSetText("", <1,1,1>, 1);
             llMessageLinked(LINK_THIS, 90302, (string)SCRIPT_CHANNEL, llDumpList2String([llGetListLength(SITTERS), llDumpList2String(SITTER_INFO, SEP), SET, MTYPE, ETYPE, SWAP, FIRST_POSENAME, BRAND, CUSTOM_TEXT, llDumpList2String(ADJUST_MENU, SEP), SELECT, AMENU & 3, OLD_HELPER_METHOD, RLVDesignations, onSit], "|")); // 90302=send notecard settings to AVsitB
+            llOwnerSay(llGetScriptName() + "[" + version + "] " + "Done loading!");
+            llMessageLinked(LINK_THIS, 99999, (string)(SCRIPT_CHANNEL+1), "");
             reused_variable = (llGetFreeMemory() - 5000) / 100;
             notecard_line = -1;
             return;
@@ -611,6 +621,8 @@ handle_notecard_line(string data)
                     FIRST_ROTATION = DEFAULT_ROTATION = CURRENT_ROTATION = (vector)rot;
                 }
                 llMessageLinked(LINK_THIS, 90301, (string)SCRIPT_CHANNEL, command + "|" + pos + "|" + rot); // 90301=send update to AVsitB
+                awaiting_sensor = TRUE;
+                sensor_timer(0.022);
                 return;
             }
             else
@@ -657,6 +669,8 @@ handle_notecard_line(string data)
                         part1 = "90200"; // default to rez prop
                     }
                     llMessageLinked(LINK_THIS, 90300, (string)SCRIPT_CHANNEL, part0 + "|" + part1); // 90300=update AVsitB
+                    awaiting_sensor = TRUE;
+                    sensor_timer(0.022);
                     return;
                 }
             }
@@ -690,6 +704,7 @@ default
         {
             SITTERS += "";
         }
+        llMessageLinked(LINK_THIS, 90299, (string)SCRIPT_CHANNEL, ""); // 90299=send Reset to AVsitB
         if (SCRIPT_CHANNEL)
         {
             memoryscript += " " + (string)SCRIPT_CHANNEL;
@@ -709,17 +724,6 @@ default
             reading_notecard_section = TRUE;
         }
         notecard_key = llGetInventoryKey(notecard_name);
-        llMessageLinked(LINK_THIS, 90299, (string)SCRIPT_CHANNEL, ""); // 90299=send Reset to AVsitB
-        if (llGetInventoryType(notecard_name) == INVENTORY_NOTECARD)
-        {
-            if (!SCRIPT_CHANNEL)
-            {
-                // Out() inlined here:
-                llOwnerSay(llGetScriptName() + "[" + version + "] " + "Loading " + notecard_name + "...");
-            }
-            notecard_line = 0;
-            notecard_query = llGetNotecardLine(notecard_name, notecard_line);
-        }
     }
 
     timer()
@@ -1074,13 +1078,11 @@ default
                 speed_index = llList2Integer(data, 5);
                 apply_current_anim(llList2Integer(data, 4));
                 set_sittarget();
-                if(notecard_line != -1) handle_notecard_line(llGetNotecardLineSync(notecard_name, ++notecard_line));
                 return;
             }
             if (num == 99999)
             {
-                if(notecard_line != -1) handle_notecard_line(llGetNotecardLineSync(notecard_name, ++notecard_line));
-                return;
+                reused_key = llGetNumberOfNotecardLines(notecard_name);
             }
             if (num == 90057) // 90057=helper moved, update position
             {
@@ -1091,6 +1093,13 @@ default
                 return;
             }
         }
+    }
+
+    no_sensor()
+    {
+        sensor_timer(0.0);
+        if(!awaiting_sensor) return;
+        if(notecard_line != -1) handle_notecard_line(llGetNotecardLineSync(notecard_name, ++notecard_line));
     }
 
     changed(integer change)
@@ -1370,6 +1379,9 @@ default
         if (query_id == reused_key)
         {
             notecard_lines = (integer)data;
+            llOwnerSay(llGetScriptName() + "[" + version + "] " + "Loading " + notecard_name + "...");
+            notecard_line = 0;
+            handle_notecard_line(llGetNotecardLineSync(notecard_name, notecard_line));
         }
     }
 }
