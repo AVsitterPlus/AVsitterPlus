@@ -580,60 +580,69 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                Out(0, (string)llGetListLength(MENU_LIST) + " menu items Ready, Memory: " + (string)llGetFreeMemory());
-                llPassTouches(FALSE);
-                if (MTYPE == 3)
+                if (data == EOF)
                 {
-                    llPassTouches(TRUE);
+                    Out(0, (string)llGetListLength(MENU_LIST) + " menu items Ready, Memory: " + (string)llGetFreeMemory());
+                    llPassTouches(FALSE);
+                    if (MTYPE == 3)
+                    {
+                        llPassTouches(TRUE);
+                    }
+                    return;
+                }
+                else
+                {
+                    data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
+                    data = llStringTrim(data, STRING_TRIM);
+                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                    list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
+                    string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
+                    string part1 = llList2String(parts, 1);
+                    if (llGetListLength(parts) > 1)
+                    {
+                        part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, 99999), SEP), STRING_TRIM);
+                    }
+                    if (command == "TEXT")
+                    {
+                        custom_text = strReplace(part0, "\\n", "\n");
+                    }
+                    part0 = llGetSubString(part0, 0, 22);
+                    if (command == "MENU")
+                    {
+                        MENU_LIST += ["M:" + part0 + "*"];
+                        DATA_LIST += "";
+                    }
+                    else if (command == "TOMENU")
+                    {
+                        MENU_LIST += ["T:" + part0 + "*"];
+                        DATA_LIST += "";
+                    }
+                    else if (command == "BUTTON")
+                    {
+                        MENU_LIST += ["B:" + part0];
+                        if (part1 == "")
+                        {
+                            part1 = "90200";
+                        }
+                        DATA_LIST += part1;
+                    }
+                    else if (command == "MTYPE")
+                    {
+                        MTYPE = (integer)part0;
+                    }
+                    else if (command == "LMSOURCE")
+                    {
+                        LMSOURCE = (integer)part0;
+                    }
+                    data = llGetNotecardLineSync(notecard_name, ++notecard_line);
                 }
             }
-            else
+
+            if (data == NAK)
             {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
-                string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
-                string part1 = llList2String(parts, 1);
-                if (llGetListLength(parts) > 1)
-                {
-                    part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, 99999), SEP), STRING_TRIM);
-                }
-                if (command == "TEXT")
-                {
-                    custom_text = strReplace(part0, "\\n", "\n");
-                }
-                part0 = llGetSubString(part0, 0, 22);
-                if (command == "MENU")
-                {
-                    MENU_LIST += ["M:" + part0 + "*"];
-                    DATA_LIST += "";
-                }
-                else if (command == "TOMENU")
-                {
-                    MENU_LIST += ["T:" + part0 + "*"];
-                    DATA_LIST += "";
-                }
-                else if (command == "BUTTON")
-                {
-                    MENU_LIST += ["B:" + part0];
-                    if (part1 == "")
-                    {
-                        part1 = "90200";
-                    }
-                    DATA_LIST += part1;
-                }
-                else if (command == "MTYPE")
-                {
-                    MTYPE = (integer)part0;
-                }
-                else if (command == "LMSOURCE")
-                {
-                    LMSOURCE = (integer)part0;
-                }
-                notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
+                notecard_query = llGetNotecardLine(notecard_name, notecard_line);
             }
         }
     }

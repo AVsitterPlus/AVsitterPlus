@@ -169,30 +169,39 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF || llStringTrim(llToLower(data), STRING_TRIM) == "end")
+            while (data != NAK)
             {
-                Out(0, (string)llGetListLength(POSE_AND_SITTER) + " items Ready, Mem=" + (string)llGetFreeMemory());
+                if (data == EOF || llStringTrim(llToLower(data), STRING_TRIM) == "end")
+                {
+                    Out(0, (string)llGetListLength(POSE_AND_SITTER) + " items Ready, Mem=" + (string)llGetFreeMemory());
+                    return;
+                }
+                else
+                {
+                    data = llStringTrim(data, STRING_TRIM);
+                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                    list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
+                    if (command == "TIMER")
+                    {
+                        TIMER_DEFAULT = llList2Integer(parts, 0);
+                    }
+                    if (command == "DEBUG")
+                    {
+                        DEBUG = llList2Integer(parts, 0);
+                    }
+                    if (command == "XCITE")
+                    {
+                        POSE_AND_SITTER += [llStringTrim(llList2String(parts, 0), STRING_TRIM) + "|" + llList2String(parts, 1)];
+                        XCITE_COMMANDS += [llList2String(parts, 2) + "|" + llList2String(parts, 3) + "|" + llList2String(parts, 4) + "|" + llList2String(parts, 5)];
+                        XCITE_TILT += llList2Integer(parts, 6);
+                    }
+                    data = llGetNotecardLineSync(notecard_name, ++notecard_line);
+                }
             }
-            else
+
+            if (data == NAK)
             {
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
-                if (command == "TIMER")
-                {
-                    TIMER_DEFAULT = llList2Integer(parts, 0);
-                }
-                if (command == "DEBUG")
-                {
-                    DEBUG = llList2Integer(parts, 0);
-                }
-                if (command == "XCITE")
-                {
-                    POSE_AND_SITTER += [llStringTrim(llList2String(parts, 0), STRING_TRIM) + "|" + llList2String(parts, 1)];
-                    XCITE_COMMANDS += [llList2String(parts, 2) + "|" + llList2String(parts, 3) + "|" + llList2String(parts, 4) + "|" + llList2String(parts, 5)];
-                    XCITE_TILT += llList2Integer(parts, 6);
-                }
-                notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
+                notecard_query = llGetNotecardLine(notecard_name, notecard_line);
             }
         }
     }

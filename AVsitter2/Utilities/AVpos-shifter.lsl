@@ -181,62 +181,71 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                cut_below_text();
-                web("\n\nend",TRUE);
-                llOwnerSay("Conversion complete, removing script.");
-                llRegionSayTo(llGetOwner(),0,"Settings copy: "+url+"?q="+webkey);
-                llRemoveInventory(llGetScriptName());
-            }
-            else
-            {
-                data = llStringTrim(llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999), STRING_TRIM);
-                if (llGetSubString(data, 0, 0) == "{")
+                if (data == EOF)
                 {
-                    string command = llStringTrim(llGetSubString(data, 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
-                    data = llDumpList2String(llParseString2List(data, [" "], [""]), "");
-                    data = llGetSubString(data, llSubStringIndex(data, "}") + 1, 99999);
-                    list parts = llParseStringKeepNulls(data, ["<"], []);
-                    vector pos = (vector)("<" + llList2String(parts, 1));
-                    pos = (pos - target_prim_pos) / target_prim_rot;
-                    rotation rot = llEuler2Rot((vector)("<" + llList2String(parts, 2)) * DEG_TO_RAD);
-                    vector vec_rot = llRot2Euler(rot / target_prim_rot) * RAD_TO_DEG;
-                    string result = "<" + FormatFloat(pos.x, 3) + "," + FormatFloat(pos.y, 3) + "," + FormatFloat(pos.z, 3) + ">";
-                    result += "<" + FormatFloat(vec_rot.x, 1) + "," + FormatFloat(vec_rot.y, 1) + "," + FormatFloat(vec_rot.z, 1) + ">";
-                    Readout_Say("{" + command + "}" + result);
+                    cut_below_text();
+                    web("\n\nend",TRUE);
+                    llOwnerSay("Conversion complete, removing script.");
+                    llRegionSayTo(llGetOwner(),0,"Settings copy: "+url+"?q="+webkey);
+                    llRemoveInventory(llGetScriptName());
+                    return;
                 }
-                else if (llSubStringIndex(llGetSubString(data, 0, 0), "PROP"))
+                else
                 {
-                    integer index;
-                    vector pos;
-                    rotation rot;
-                    list parts = llParseStringKeepNulls(data, ["|"], [""]);
-                    if (IsVector(llList2String(parts, 2)) && IsVector(llList2String(parts, 3)))
+                    data = llStringTrim(llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999), STRING_TRIM);
+                    if (llGetSubString(data, 0, 0) == "{")
                     {
-                        index = 2;
-                    }
-                    else if (IsVector(llList2String(parts, 3)) && IsVector(llList2String(parts, 4)))
-                    {
-                        index = 3;
-                    }
-                    if (index)
-                    {
-                        pos = (vector)llList2String(parts, index);
-                        rot = llEuler2Rot((vector)llList2String(parts, index + 1) * DEG_TO_RAD);
+                        string command = llStringTrim(llGetSubString(data, 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
+                        data = llDumpList2String(llParseString2List(data, [" "], [""]), "");
+                        data = llGetSubString(data, llSubStringIndex(data, "}") + 1, 99999);
+                        list parts = llParseStringKeepNulls(data, ["<"], []);
+                        vector pos = (vector)("<" + llList2String(parts, 1));
                         pos = (pos - target_prim_pos) / target_prim_rot;
+                        rotation rot = llEuler2Rot((vector)("<" + llList2String(parts, 2)) * DEG_TO_RAD);
                         vector vec_rot = llRot2Euler(rot / target_prim_rot) * RAD_TO_DEG;
-                        string pos_string = "<" + FormatFloat(pos.x, 3) + "," + FormatFloat(pos.y, 3) + "," + FormatFloat(pos.z, 3) + ">";
-                        string rot_string = "<" + FormatFloat(vec_rot.x, 1) + "," + FormatFloat(vec_rot.y, 1) + "," + FormatFloat(vec_rot.z, 1) + ">";
-                        parts = llListReplaceList(parts, [pos_string, rot_string], index, index + 1);
+                        string result = "<" + FormatFloat(pos.x, 3) + "," + FormatFloat(pos.y, 3) + "," + FormatFloat(pos.z, 3) + ">";
+                        result += "<" + FormatFloat(vec_rot.x, 1) + "," + FormatFloat(vec_rot.y, 1) + "," + FormatFloat(vec_rot.z, 1) + ">";
+                        Readout_Say("{" + command + "}" + result);
                     }
-                    Readout_Say(llDumpList2String(parts, "|"));
+                    else if (llSubStringIndex(llGetSubString(data, 0, 0), "PROP"))
+                    {
+                        integer index;
+                        vector pos;
+                        rotation rot;
+                        list parts = llParseStringKeepNulls(data, ["|"], [""]);
+                        if (IsVector(llList2String(parts, 2)) && IsVector(llList2String(parts, 3)))
+                        {
+                            index = 2;
+                        }
+                        else if (IsVector(llList2String(parts, 3)) && IsVector(llList2String(parts, 4)))
+                        {
+                            index = 3;
+                        }
+                        if (index)
+                        {
+                            pos = (vector)llList2String(parts, index);
+                            rot = llEuler2Rot((vector)llList2String(parts, index + 1) * DEG_TO_RAD);
+                            pos = (pos - target_prim_pos) / target_prim_rot;
+                            vector vec_rot = llRot2Euler(rot / target_prim_rot) * RAD_TO_DEG;
+                            string pos_string = "<" + FormatFloat(pos.x, 3) + "," + FormatFloat(pos.y, 3) + "," + FormatFloat(pos.z, 3) + ">";
+                            string rot_string = "<" + FormatFloat(vec_rot.x, 1) + "," + FormatFloat(vec_rot.y, 1) + "," + FormatFloat(vec_rot.z, 1) + ">";
+                            parts = llListReplaceList(parts, [pos_string, rot_string], index, index + 1);
+                        }
+                        Readout_Say(llDumpList2String(parts, "|"));
+                    }
+                    else if (data != "")
+                    {
+                        Readout_Say(data);
+                    }
+                    data = llGetNotecardLine(notecard_name, ++notecard_line);
                 }
-                else if (data != "")
-                {
-                    Readout_Say(data);
-                }
-                notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
+            }
+
+            if (data == NAK)
+            {
+                notecard_query = llGetNotecardLine(notecard_name, notecard_line);
             }
         }
     }

@@ -188,63 +188,71 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                integer i;
-                Out(0, "Ready");
-            }
-            else
-            {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
-                string part0 = llList2String(parts, 0);
-                if (command == "TEXT")
+                if (data == EOF)
                 {
-                    CUSTOM_TEXT = strReplace(part0, "\\n", "\n") + "\n";
+                    integer i;
+                    Out(0, "Ready");
                 }
-                else if (command == "SITTER")
+                else
                 {
-                    reading_notecard_section = (integer)part0;
-                    string button_text = llList2String(parts, 1);
-                    if (reading_notecard_section < llGetListLength(SITTERS))
+                    data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
+                    data = llStringTrim(data, STRING_TRIM);
+                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                    list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
+                    string part0 = llList2String(parts, 0);
+                    if (command == "TEXT")
                     {
-                        if (button_text != "" && llListFindList(BUTTONS, [button_text]) == -1)
-                        {
-                            BUTTONS = llListReplaceList(BUTTONS, [button_text], reading_notecard_section, reading_notecard_section);
-                            reading_notecard_section = -1;
-                        }
+                        CUSTOM_TEXT = strReplace(part0, "\\n", "\n") + "\n";
                     }
-                }
-                else if (command == "MTYPE")
-                {
-                    menu_type = (integer)part0;
-                }
-                else if (command == "SELECT")
-                {
-                    select_type = (integer)part0;
-                }
-                else if (command == "POSE" || command == "SYNC")
-                {
-                    if (reading_notecard_section < llGetListLength(SITTERS) && reading_notecard_section != -1)
+                    else if (command == "SITTER")
                     {
-                        if (llList2String(BUTTONS, reading_notecard_section) == "Sitter " + (string)reading_notecard_section)
+                        reading_notecard_section = (integer)part0;
+                        string button_text = llList2String(parts, 1);
+                        if (reading_notecard_section < llGetListLength(SITTERS))
                         {
-                            part0 = llGetSubString(part0, 0, 22);
-                            if (llListFindList(BUTTONS, [part0]) == -1)
+                            if (button_text != "" && llListFindList(BUTTONS, [button_text]) == -1)
                             {
-                                BUTTONS = llListReplaceList(BUTTONS, [part0], reading_notecard_section, reading_notecard_section);
+                                BUTTONS = llListReplaceList(BUTTONS, [button_text], reading_notecard_section, reading_notecard_section);
+                                reading_notecard_section = -1;
                             }
                         }
-                        else
+                    }
+                    else if (command == "MTYPE")
+                    {
+                        menu_type = (integer)part0;
+                    }
+                    else if (command == "SELECT")
+                    {
+                        select_type = (integer)part0;
+                    }
+                    else if (command == "POSE" || command == "SYNC")
+                    {
+                        if (reading_notecard_section < llGetListLength(SITTERS) && reading_notecard_section != -1)
                         {
-                            BUTTONS = llListReplaceList(BUTTONS, ["Sitter " + (string)reading_notecard_section], reading_notecard_section, reading_notecard_section);
-                            reading_notecard_section = -1;
+                            if (llList2String(BUTTONS, reading_notecard_section) == "Sitter " + (string)reading_notecard_section)
+                            {
+                                part0 = llGetSubString(part0, 0, 22);
+                                if (llListFindList(BUTTONS, [part0]) == -1)
+                                {
+                                    BUTTONS = llListReplaceList(BUTTONS, [part0], reading_notecard_section, reading_notecard_section);
+                                }
+                            }
+                            else
+                            {
+                                BUTTONS = llListReplaceList(BUTTONS, ["Sitter " + (string)reading_notecard_section], reading_notecard_section, reading_notecard_section);
+                                reading_notecard_section = -1;
+                            }
                         }
                     }
+                    data = llGetNotecardLineSync(notecard_name, ++variable1);
                 }
-                notecard_query = llGetNotecardLine(notecard_name, ++variable1);
+            }
+
+            if (data == NAK)
+            {
+                notecard_query = llGetNotecardLine(notecard_name, variable1);
             }
         }
     }

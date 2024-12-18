@@ -1,17 +1,17 @@
 /*
- * This Source Code Form is subject to the terms of the Mozilla Public 
- * License, v. 2.0. If a copy of the MPL was not distributed with this 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * Copyright (c) the AVsitter Contributors (http://avsitter.github.io)
  * AVsitter™ is a trademark. For trademark use policy see:
  * https://avsitter.github.io/TRADEMARK.mediawiki
- * 
+ *
  * Please consider supporting continued development of AVsitter and
- * receive automatic updates and other benefits! All details and user 
+ * receive automatic updates and other benefits! All details and user
  * instructions can be found at http://avsitter.github.io
  */
- 
+
 /*
 AVsitter1 link message notes (rough)
 99899 = Bring up AVselect menu
@@ -21,14 +21,14 @@ AVsitter1 link message notes (rough)
 90005 = Touched "", llDetectedKey(0)); // give the menu
 90006 = Bring the ADJUST MENU
 90010 = Tell the Adjuster to Save
-90020 = Tell Animators to Readout (string)(script_channel+1),"");    
+90020 = Tell Animators to Readout (string)(script_channel+1),"");
 90025 = Tell AVselect to dump SITTER line
-90030 = Tell Animators and Adjuster to SWAP (string)script_channel, (string)target_script);    
-90040 = New Helper Animation (string)script_channel+"|"+(string)llGetListLength(SITTERS),"");    
+90030 = Tell Animators and Adjuster to SWAP (string)script_channel, (string)target_script);
+90040 = New Helper Animation (string)script_channel+"|"+(string)llGetListLength(SITTERS),"");
 90045 = play_anim reports the pose name and animation name and avatar
 90050 = Adjuster tells Animator to animate an avi (string)llList2Key(data,1),llList2Key(data,2));
 90055 = Outgoing/internal version of 90000
-90060 = Done All (clear helpers) and Welcome Sitter "",llAvatarOnSitTarget()); 
+90060 = Done All (clear helpers) and Welcome Sitter "",llAvatarOnSitTarget());
 90065 = Goodbye Sitter "",llList2Key(SITTERS,script_channel));
 90070 = Manipulate SITTERS list and Adjusters sitters list from another animators perms granted
 90075 = Manipulate SITTERS with NULL_KEY
@@ -896,132 +896,141 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                play_anim(first_anim);
-                if (!script_channel)
+                if (data == EOF)
                 {
-                    if (CURRENT_POSITION.x == 0.35)
-                        CURRENT_POSITION.x += 0.001;
-                    llSitTarget(CURRENT_POSITION - <0,0,0.35>, llEuler2Rot(CURRENT_ROTATION * DEG_TO_RAD));
-                }
-                else
-                {
-                    llMessageLinked(LINK_SET, 90180, (string)script_channel, (string)CURRENT_POSITION + "|" + (string)CURRENT_ROTATION);
-                }
-                llSleep((float)script_channel);
-                Owner_Say((string)llGetListLength(MENU_LIST) + " items Ready, Memory: " + (string)llGetFreeMemory());
-                variable1 = (llGetFreeMemory() - 2000) / 200;
-            }
-            else
-            {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
-                string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
-                string part1 = llList2String(parts, 1);
-                if (command == "SITTER")
-                {
-                    reading_notecard_section = FALSE;
-                    if ((integer)part0 == script_channel)
+                    play_anim(first_anim);
+                    if (!script_channel)
                     {
-                        reading_notecard_section = TRUE;
-                        sitter_text = part1;
-                    }
-                }
-                else if (command == "MTYPE")
-                {
-                    menu_type = (integer)part0;
-                    llPassTouches(FALSE);
-                    if (menu_type == 3)
-                    {
-                        llPassTouches(TRUE);
-                    }
-                }
-                else if (command == "ETYPE")
-                {
-                    exit_type = (integer)part0;
-                }
-                else if (command == "SELECT")
-                {
-                    select_type = (integer)part0;
-                }
-                else if (reading_notecard_section == TRUE)
-                {
-                    if (llGetSubString(data, 0, 0) == "{")
-                    {
-                        command = llStringTrim(llGetSubString(data, 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
-                        integer index = llListFindList(MENU_LIST, [command]);
-                        if (index == -1)
-                        {
-                            index = llListFindList(MENU_LIST, ["S:" + command]);
-                        }
-                        if (index == -1)
-                        {
-                            Owner_Say("Error: '" + command + "' not found in menu structure");
-                        }
-                        else
-                        {
-                            data = llDumpList2String(llParseString2List(data, [" "], [""]), "");
-                            data = llGetSubString(data, llSubStringIndex(data, "}") + 1, -1);
-                            parts = llParseStringKeepNulls(data, ["<"], []);
-                            POS_LIST = llListReplaceList(POS_LIST, [(vector)("<" + llList2String(parts, 1))], index, index);
-                            ROT_LIST = llListReplaceList(ROT_LIST, [(vector)("<" + llList2String(parts, 2))], index, index);
-                        }
+                        if (CURRENT_POSITION.x == 0.35)
+                            CURRENT_POSITION.x += 0.001;
+                        llSitTarget(CURRENT_POSITION - <0,0,0.35>, llEuler2Rot(CURRENT_ROTATION * DEG_TO_RAD));
                     }
                     else
                     {
-                        if (llStringLength(part0) > 23)
+                        llMessageLinked(LINK_SET, 90180, (string)script_channel, (string)CURRENT_POSITION + "|" + (string)CURRENT_ROTATION);
+                    }
+                    llSleep((float)script_channel);
+                    Owner_Say((string)llGetListLength(MENU_LIST) + " items Ready, Memory: " + (string)llGetFreeMemory());
+                    variable1 = (llGetFreeMemory() - 2000) / 200;
+                    return;
+                }
+                else
+                {
+                    data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
+                    data = llStringTrim(data, STRING_TRIM);
+                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                    list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+                    string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
+                    string part1 = llList2String(parts, 1);
+                    if (command == "SITTER")
+                    {
+                        reading_notecard_section = FALSE;
+                        if ((integer)part0 == script_channel)
                         {
-                            part0 = llGetSubString(part0, 0, 22);
-                        }
-                        if (command == "POSE" || command == "SYNC")
-                        {
-                            if (command == "SYNC")
-                            {
-                                part0 = "S:" + part0;
-                            }
-                            if (llListFindList(MENU_LIST, [part0]) == -1)
-                            {
-                                MENU_LIST += part0;
-                                DATA_LIST += part1;
-                                POS_LIST += 0;
-                                ROT_LIST += 0;
-                                if (first_anim == -1)
-                                {
-                                    first_anim = llGetListLength(MENU_LIST) - 1;
-                                }
-                            }
-                        }
-                        else if (command == "MENU")
-                        {
-                            MENU_LIST += ["M:" + part0 + "*"];
-                            DATA_LIST += "";
-                            POS_LIST += 0;
-                            ROT_LIST += 0;
-                        }
-                        else if (command == "TOMENU")
-                        {
-                            MENU_LIST += ["T:" + part0 + "*"];
-                            DATA_LIST += "";
-                            POS_LIST += 0;
-                            ROT_LIST += 0;
-                        }
-                        else if (command == "BUTTON")
-                        {
-                            MENU_LIST += ["B:" + part0];
-                            DATA_LIST += llList2Integer(parts, 1);
-                            POS_LIST += 0;
-                            ROT_LIST += 0;
-                        }
-                        else if (command == "LOO")
-                        {
-                            loops += llGetListLength(MENU_LIST);
+                            reading_notecard_section = TRUE;
+                            sitter_text = part1;
                         }
                     }
+                    else if (command == "MTYPE")
+                    {
+                        menu_type = (integer)part0;
+                        llPassTouches(FALSE);
+                        if (menu_type == 3)
+                        {
+                            llPassTouches(TRUE);
+                        }
+                    }
+                    else if (command == "ETYPE")
+                    {
+                        exit_type = (integer)part0;
+                    }
+                    else if (command == "SELECT")
+                    {
+                        select_type = (integer)part0;
+                    }
+                    else if (reading_notecard_section == TRUE)
+                    {
+                        if (llGetSubString(data, 0, 0) == "{")
+                        {
+                            command = llStringTrim(llGetSubString(data, 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
+                            integer index = llListFindList(MENU_LIST, [command]);
+                            if (index == -1)
+                            {
+                                index = llListFindList(MENU_LIST, ["S:" + command]);
+                            }
+                            if (index == -1)
+                            {
+                                Owner_Say("Error: '" + command + "' not found in menu structure");
+                            }
+                            else
+                            {
+                                data = llDumpList2String(llParseString2List(data, [" "], [""]), "");
+                                data = llGetSubString(data, llSubStringIndex(data, "}") + 1, -1);
+                                parts = llParseStringKeepNulls(data, ["<"], []);
+                                POS_LIST = llListReplaceList(POS_LIST, [(vector)("<" + llList2String(parts, 1))], index, index);
+                                ROT_LIST = llListReplaceList(ROT_LIST, [(vector)("<" + llList2String(parts, 2))], index, index);
+                            }
+                        }
+                        else
+                        {
+                            if (llStringLength(part0) > 23)
+                            {
+                                part0 = llGetSubString(part0, 0, 22);
+                            }
+                            if (command == "POSE" || command == "SYNC")
+                            {
+                                if (command == "SYNC")
+                                {
+                                    part0 = "S:" + part0;
+                                }
+                                if (llListFindList(MENU_LIST, [part0]) == -1)
+                                {
+                                    MENU_LIST += part0;
+                                    DATA_LIST += part1;
+                                    POS_LIST += 0;
+                                    ROT_LIST += 0;
+                                    if (first_anim == -1)
+                                    {
+                                        first_anim = llGetListLength(MENU_LIST) - 1;
+                                    }
+                                }
+                            }
+                            else if (command == "MENU")
+                            {
+                                MENU_LIST += ["M:" + part0 + "*"];
+                                DATA_LIST += "";
+                                POS_LIST += 0;
+                                ROT_LIST += 0;
+                            }
+                            else if (command == "TOMENU")
+                            {
+                                MENU_LIST += ["T:" + part0 + "*"];
+                                DATA_LIST += "";
+                                POS_LIST += 0;
+                                ROT_LIST += 0;
+                            }
+                            else if (command == "BUTTON")
+                            {
+                                MENU_LIST += ["B:" + part0];
+                                DATA_LIST += llList2Integer(parts, 1);
+                                POS_LIST += 0;
+                                ROT_LIST += 0;
+                            }
+                            else if (command == "LOO")
+                            {
+                                loops += llGetListLength(MENU_LIST);
+                            }
+                        }
+                    }
+                    data = llGetNotecardLineSync(notecard_name, variable1 += 1);
                 }
-                notecard_query = llGetNotecardLine(notecard_name, variable1 += 1);
+            }
+
+            if (data == NAK)
+            {
+                notecard_query = llGetNotecardLine(notecard_name, variable1);
             }
         }
     }

@@ -1,17 +1,17 @@
 /*
- * This Source Code Form is subject to the terms of the Mozilla Public 
- * License, v. 2.0. If a copy of the MPL was not distributed with this 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * Copyright (c) the AVsitter Contributors (http://avsitter.github.io)
  * AVsitter™ is a trademark. For trademark use policy see:
  * https://avsitter.github.io/TRADEMARK.mediawiki
- * 
+ *
  * Please consider supporting continued development of AVsitter and
- * receive automatic updates and other benefits! All details and user 
+ * receive automatic updates and other benefits! All details and user
  * instructions can be found at http://avsitter.github.io
  */
- 
+
 string product_and_version = "AVsitter™ AVplus 1.4";
 list facial_anim_list = ["express_afraid_emote", "express_anger_emote", "express_laugh_emote", "express_bored_emote", "express_cry_emote", "express_embarrassed_emote", "express_sad_emote", "express_toothsmile", "express_smile", "express_surprise_emote", "express_worry_emote", "express_repulsed_emote", "express_shrug_emote", "express_wink_emote", "express_disdain", "express_frown", "express_kiss", "express_open_mouth", "express_tongue_out"];
 integer IsInteger(string data)
@@ -894,66 +894,75 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                Owner_Say("Ready, Memory: " + (string)llGetFreeMemory());
-                llPlaySound("ed124764-705d-d497-167a-182cd9fa2e6c", 1);
-            }
-            else
-            {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
-                data = llDumpList2String(llList2List(parts, 1, -1), "|");
-                string pose = llList2String(parts, 0);
-                if (llSubStringIndex(pose, "S:") == 0)
+                if (data == EOF)
                 {
-                    pose = llGetSubString(pose, 2, -1);
+                    Owner_Say("Ready, Memory: " + (string)llGetFreeMemory());
+                    llPlaySound("ed124764-705d-d497-167a-182cd9fa2e6c", 1);
+                    return;
                 }
-                if (command == "PROP")
+                else
                 {
-                    prop_triggers += pose;
-                    props += data;
-                    Owner_Say("Read settings for Prop '" + llList2String(parts, 1) + "'");
-                }
-                else if (command == "SOUND")
-                {
-                    sound_triggers += pose;
-                    sounds += data;
-                    Owner_Say("Read settings for Sound '" + llList2String(parts, 1) + "'");
-                }
-                else if (command == "ITEM")
-                {
-                    item_triggers += pose;
-                    items += data;
-                    Owner_Say("Read settings for Item '" + llList2String(parts, 1) + "'");
-                }
-                else if (command == "ANIM")
-                {
-                    anim_triggers += pose;
-                    list anim_data = llParseStringKeepNulls(data, ["|"], []);
-                    list sequence = llParseStringKeepNulls(llList2String(anim_data, 0), [":"], []);
-                    integer i;
-                    for (i = 0; i < llGetListLength(sequence); i = i + 2)
+                    data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
+                    data = llStringTrim(data, STRING_TRIM);
+                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                    list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+                    data = llDumpList2String(llList2List(parts, 1, -1), "|");
+                    string pose = llList2String(parts, 0);
+                    if (llSubStringIndex(pose, "S:") == 0)
                     {
-                        integer index = llListFindList(facial_anim_list, [llList2String(sequence, i)]);
-                        if (index != -1)
-                        {
-                            sequence = llListReplaceList(sequence, [index], i, i);
-                        }
+                        pose = llGetSubString(pose, 2, -1);
                     }
-                    anim_data = llListReplaceList(anim_data, [llDumpList2String(sequence, ":")], 0, 0);
-                    anims += llDumpList2String(anim_data, "|");
-                    Owner_Say("Read settings for Expressions for '" + pose + "'");
+                    if (command == "PROP")
+                    {
+                        prop_triggers += pose;
+                        props += data;
+                        Owner_Say("Read settings for Prop '" + llList2String(parts, 1) + "'");
+                    }
+                    else if (command == "SOUND")
+                    {
+                        sound_triggers += pose;
+                        sounds += data;
+                        Owner_Say("Read settings for Sound '" + llList2String(parts, 1) + "'");
+                    }
+                    else if (command == "ITEM")
+                    {
+                        item_triggers += pose;
+                        items += data;
+                        Owner_Say("Read settings for Item '" + llList2String(parts, 1) + "'");
+                    }
+                    else if (command == "ANIM")
+                    {
+                        anim_triggers += pose;
+                        list anim_data = llParseStringKeepNulls(data, ["|"], []);
+                        list sequence = llParseStringKeepNulls(llList2String(anim_data, 0), [":"], []);
+                        integer i;
+                        for (i = 0; i < llGetListLength(sequence); i = i + 2)
+                        {
+                            integer index = llListFindList(facial_anim_list, [llList2String(sequence, i)]);
+                            if (index != -1)
+                            {
+                                sequence = llListReplaceList(sequence, [index], i, i);
+                            }
+                        }
+                        anim_data = llListReplaceList(anim_data, [llDumpList2String(sequence, ":")], 0, 0);
+                        anims += llDumpList2String(anim_data, "|");
+                        Owner_Say("Read settings for Expressions for '" + pose + "'");
+                    }
+                    else if (command == "CAMERA")
+                    {
+                        camera_position = (vector)pose;
+                        camera_focus = (vector)llList2String(parts, 1);
+                        Owner_Say("Read settings for Camera");
+                    }
+                    data = llGetNotecardLineSync(notecard_name, notecard_line += 1);
                 }
-                else if (command == "CAMERA")
-                {
-                    camera_position = (vector)pose;
-                    camera_focus = (vector)llList2String(parts, 1);
-                    Owner_Say("Read settings for Camera");
-                }
-                notecard_query = llGetNotecardLine(notecard_name, notecard_line += 1);
+            }
+
+            if (data == NAK)
+            {
+                notecard_query = llGetNotecardLine(notecard_name, notecard_line);
             }
         }
     }

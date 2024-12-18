@@ -409,46 +409,55 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                // Out() inlined here:
-                llOwnerSay(llGetScriptName() + "[" + version + "] " + (string)llGetListLength(anim_triggers) + " Expressions Ready, Mem=" + (string)llGetFreeMemory());
-            }
-            else
-            {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
-                if (command == "SITTER")
+                if (data == EOF)
                 {
-                    notecard_section = llList2Integer(parts, 0);
+                    // Out() inlined here:
+                    llOwnerSay(llGetScriptName() + "[" + version + "] " + (string)llGetListLength(anim_triggers) + " Expressions Ready, Mem=" + (string)llGetFreeMemory());
+                    return;
                 }
-                if (command == "ANIM")
+                else
                 {
-                    string part1 = llStringTrim(llDumpList2String(llDeleteSubList(parts, 0, 0), "|"), STRING_TRIM);
-                    list sequence = llParseString2List(part1, ["|"], []);
-                    integer x;
-                    for (; x < llGetListLength(sequence); x += 2)
+                    data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
+                    data = llStringTrim(data, STRING_TRIM);
+                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                    list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
+                    if (command == "SITTER")
                     {
-                        integer index = llListFindList(facial_anim_list, [llList2String(sequence, x)]);
-                        if (~index)
-                        {
-                            // Reuse the string in facial_anim_list to save memory
-                            sequence = llListReplaceList(sequence,
-                                llList2List(facial_anim_list, index, index), // OSS::[index],
-                                x, x);
-                        }
+                        notecard_section = llList2Integer(parts, 0);
                     }
-                    anim_triggers += [(string)notecard_section + "|" + llStringTrim(llList2String(parts, 0), STRING_TRIM)];
-                    part1 = llDumpList2String(sequence, "|");
-                    // Reuse existing entries to save data memory when possible
-                    x = llListFindList(anim_animsequences, [part1]);
-                    if (~x)
-                        part1 = llList2String(anim_animsequences, x);
-                    anim_animsequences += part1;
+                    if (command == "ANIM")
+                    {
+                        string part1 = llStringTrim(llDumpList2String(llDeleteSubList(parts, 0, 0), "|"), STRING_TRIM);
+                        list sequence = llParseString2List(part1, ["|"], []);
+                        integer x;
+                        for (; x < llGetListLength(sequence); x += 2)
+                        {
+                            integer index = llListFindList(facial_anim_list, [llList2String(sequence, x)]);
+                            if (~index)
+                            {
+                                // Reuse the string in facial_anim_list to save memory
+                                sequence = llListReplaceList(sequence,
+                                    llList2List(facial_anim_list, index, index), // OSS::[index],
+                                    x, x);
+                            }
+                        }
+                        anim_triggers += [(string)notecard_section + "|" + llStringTrim(llList2String(parts, 0), STRING_TRIM)];
+                        part1 = llDumpList2String(sequence, "|");
+                        // Reuse existing entries to save data memory when possible
+                        x = llListFindList(anim_animsequences, [part1]);
+                        if (~x)
+                            part1 = llList2String(anim_animsequences, x);
+                        anim_animsequences += part1;
+                    }
+                    data = llGetNotecardLineSync(notecard_name, ++notecard_line);
                 }
-                notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
+            }
+
+            if (data == NAK)
+            {
+                notecard_query = llGetNotecardLine(notecard_name, notecard_line);
             }
         }
     }

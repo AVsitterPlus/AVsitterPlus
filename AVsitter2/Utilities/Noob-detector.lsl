@@ -252,21 +252,27 @@ state read_notecards{
 
     dataserver(key query_id, string body){
         if(query_id == notecard_query){
-            if (body != EOF){
-                add_out(body,FALSE);
-                notecard_query=llGetNotecardLine(llList2String(notecards_to_read,notecard_index),++notecard_line);
-            }
-            else{
-                notecard_index++;
-                if(llList2String(notecards_to_read,notecard_index)!=""){
-                    notecard_line=0;
-                    string line = "\n"+llList2String(notecards_to_read,notecard_index)+"\n-----------";
-                    add_out(line,FALSE);
-                    notecard_query=llGetNotecardLine(llList2String(notecards_to_read,notecard_index),notecard_line);
+            while (body != NAK){
+                if (body != EOF){
+                    add_out(body,FALSE);
+                    body=llGetNotecardLineSync(llList2String(notecards_to_read,notecard_index),++notecard_line);
                 }
                 else{
-                    state end;
+                    notecard_index++;
+                    if(llList2String(notecards_to_read,notecard_index)!=""){
+                        notecard_line=0;
+                        string line = "\n"+llList2String(notecards_to_read,notecard_index)+"\n-----------";
+                        add_out(line,FALSE);
+                        notecard_query=llGetNotecardLine(llList2String(notecards_to_read,notecard_index),notecard_line);
+                    }
+                    else{
+                        state end;
+                    }
                 }
+            }
+
+            if (body == NAK){
+                notecard_query=llGetNotecardLine(llList2String(notecards_to_read,notecard_index),notecard_line);
             }
         }
     }

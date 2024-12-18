@@ -260,37 +260,46 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                commit_sequence_data();
-                state running;
-            }
-            else
-            {
-                list datalist = llParseString2List(data, [" "], []);
-                string command = llList2String(datalist, 0);
-                data = llStringTrim(llDumpList2String(llList2List(datalist, 1, 99999), " "), STRING_TRIM);
-                list commands = ["PLAY", "WAIT", "SAY", "WHISPER", "SOUND", "LOOP"];
-                if (command == "DEBUG")
+                if (data == EOF)
                 {
-                    DEBUG = (integer)data;
+                    commit_sequence_data();
+                    state running;
+                    return;
                 }
-                else if (command == "SEQUENCE")
+                else
                 {
-                    if (CURRENT_SEQUENCE_NAME != "")
+                    list datalist = llParseString2List(data, [" "], []);
+                    string command = llList2String(datalist, 0);
+                    data = llStringTrim(llDumpList2String(llList2List(datalist, 1, 99999), " "), STRING_TRIM);
+                    list commands = ["PLAY", "WAIT", "SAY", "WHISPER", "SOUND", "LOOP"];
+                    if (command == "DEBUG")
                     {
-                        commit_sequence_data();
+                        DEBUG = (integer)data;
                     }
-                    CURRENT_SEQUENCE_NAME = data;
-                    CURRENT_SEQUENCE_ACTIONS = [];
-                    CURRENT_SEQUENCE_DATAS = [];
+                    else if (command == "SEQUENCE")
+                    {
+                        if (CURRENT_SEQUENCE_NAME != "")
+                        {
+                            commit_sequence_data();
+                        }
+                        CURRENT_SEQUENCE_NAME = data;
+                        CURRENT_SEQUENCE_ACTIONS = [];
+                        CURRENT_SEQUENCE_DATAS = [];
+                    }
+                    else if (llListFindList(commands, [command]) != -1)
+                    {
+                        CURRENT_SEQUENCE_ACTIONS += command;
+                        CURRENT_SEQUENCE_DATAS += data;
+                    }
+                    data = llGetNotecardLineSync(notecard_name, ++notecard_line);
                 }
-                else if (llListFindList(commands, [command]) != -1)
-                {
-                    CURRENT_SEQUENCE_ACTIONS += command;
-                    CURRENT_SEQUENCE_DATAS += data;
-                }
-                notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
+            }
+
+            if (data == NAK)
+            {
+                notecard_query = llGetNotecardLine(notecard_name, notecard_line);
             }
         }
     }

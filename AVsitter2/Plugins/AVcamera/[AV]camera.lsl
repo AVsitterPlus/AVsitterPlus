@@ -220,29 +220,38 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                Out(0, (string)llGetListLength(camera_triggers) + " Cameras Ready, Mem=" + (string)llGetFreeMemory());
+                if (data == EOF)
+                {
+                    Out(0, (string)llGetListLength(camera_triggers) + " Cameras Ready, Mem=" + (string)llGetFreeMemory());
+                    return;
+                }
+                else
+                {
+                    data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
+                    data = llStringTrim(data, STRING_TRIM);
+                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                    list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
+                    string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
+                    if (command == "SITTER")
+                    {
+                        notecard_section = (integer)part0;
+                    }
+                    else if (notecard_section == SCRIPT_CHANNEL && command == "CAMERA")
+                    {
+                        string part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, 99999), "|"), STRING_TRIM);
+                        list sequence = llParseString2List(part1, ["|"], []);
+                        camera_triggers += part0;
+                        camera_settings += part1;
+                    }
+                    data = llGetNotecardLineSync(notecard_name, ++notecard_line);
+                }
             }
-            else
+
+            if (data == NAK)
             {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, 99999);
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
-                string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
-                if (command == "SITTER")
-                {
-                    notecard_section = (integer)part0;
-                }
-                else if (notecard_section == SCRIPT_CHANNEL && command == "CAMERA")
-                {
-                    string part1 = llStringTrim(llDumpList2String(llList2List(parts, 1, 99999), "|"), STRING_TRIM);
-                    list sequence = llParseString2List(part1, ["|"], []);
-                    camera_triggers += part0;
-                    camera_settings += part1;
-                }
-                notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
+                notecard_query = llGetNotecardLine(notecard_name, notecard_line);
             }
         }
     }

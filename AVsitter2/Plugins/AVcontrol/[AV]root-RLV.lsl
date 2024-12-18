@@ -1220,82 +1220,91 @@ state running
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                Out(0, "Loaded, Memory: " + (string)llGetFreeMemory());
-            }
-            else
-            {
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
-                string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
-                part0 = llGetSubString(part0, 0, 22);
-                if (command == "WAITPOSE")
+                if (data == EOF)
                 {
-                    WAITPOSE = part0;
-                    playpose(WAITPOSE, "");
+                    Out(0, "Loaded, Memory: " + (string)llGetFreeMemory());
+                    return;
                 }
-                else if (command == "RLV")
+                else
                 {
-                    RLV_ON = (integer)part0;
-                }
-                else if (command == "SUBCONTROL")
-                {
-                    subControl = (integer)part0;
-                }
-                else if (command == "HTEXT")
-                {
-                    HTEXT = (integer)part0;
-                }
-                else if (command == "DOMPOSE")
-                {
-                    DOMPOSE = part0;
-                }
-                else if (command == "SUBPOSE")
-                {
-                    SUBPOSE = part0;
-                }
-                else if (command == "ONTOUCH")
-                {
-                    onTouch = part0;
-                }
-                else if (command == "ONSIT")
-                {
-                    onSit = part0;
-                    if (onSit == "ASKONLY")
+                    data = llStringTrim(data, STRING_TRIM);
+                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                    list parts = llParseStringKeepNulls(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
+                    string part0 = llStringTrim(llList2String(parts, 0), STRING_TRIM);
+                    part0 = llGetSubString(part0, 0, 22);
+                    if (command == "WAITPOSE")
                     {
-                        onSit = "ASK";
-                        captureOnAsk = FALSE;
+                        WAITPOSE = part0;
+                        playpose(WAITPOSE, "");
                     }
+                    else if (command == "RLV")
+                    {
+                        RLV_ON = (integer)part0;
+                    }
+                    else if (command == "SUBCONTROL")
+                    {
+                        subControl = (integer)part0;
+                    }
+                    else if (command == "HTEXT")
+                    {
+                        HTEXT = (integer)part0;
+                    }
+                    else if (command == "DOMPOSE")
+                    {
+                        DOMPOSE = part0;
+                    }
+                    else if (command == "SUBPOSE")
+                    {
+                        SUBPOSE = part0;
+                    }
+                    else if (command == "ONTOUCH")
+                    {
+                        onTouch = part0;
+                    }
+                    else if (command == "ONSIT")
+                    {
+                        onSit = part0;
+                        if (onSit == "ASKONLY")
+                        {
+                            onSit = "ASK";
+                            captureOnAsk = FALSE;
+                        }
+                    }
+                    else if (command == "BRAND")
+                    {
+                        product = part0;
+                    }
+                    else if (command == "RECAPTURE")
+                    {
+                        autoRecapture = (integer)part0;
+                    }
+                    else if (command == "ROLES")
+                    {
+                        SITTER_DESIGNATIONS_MASTER = parts;
+                        DESIGNATIONS_NOW = SITTER_DESIGNATIONS_MASTER;
+                        llMessageLinked(LINK_THIS, 90206, llDumpList2String(DESIGNATIONS_NOW, "|"), "");
+                    }
+                    else if (command == "TIMELOCK")
+                    {
+                        defaultTimelock = TimelockSecUntilRelease = (integer)part0 * 60;
+                    }
+                    else if (command == "ONCAPTURE")
+                    {
+                        baseCaptureRestrictions = llDumpList2String(parts, "|");
+                    }
+                    else if (command == "ONRELEASE")
+                    {
+                        baseReleaseRestrictions = llDumpList2String(parts, "|");
+                    }
+                    data = llGetNotecardLineSync(notecard_name, ++notecard_line);
                 }
-                else if (command == "BRAND")
-                {
-                    product = part0;
-                }
-                else if (command == "RECAPTURE")
-                {
-                    autoRecapture = (integer)part0;
-                }
-                else if (command == "ROLES")
-                {
-                    SITTER_DESIGNATIONS_MASTER = parts;
-                    DESIGNATIONS_NOW = SITTER_DESIGNATIONS_MASTER;
-                    llMessageLinked(LINK_THIS, 90206, llDumpList2String(DESIGNATIONS_NOW, "|"), "");
-                }
-                else if (command == "TIMELOCK")
-                {
-                    defaultTimelock = TimelockSecUntilRelease = (integer)part0 * 60;
-                }
-                else if (command == "ONCAPTURE")
-                {
-                    baseCaptureRestrictions = llDumpList2String(parts, "|");
-                }
-                else if (command == "ONRELEASE")
-                {
-                    baseReleaseRestrictions = llDumpList2String(parts, "|");
-                }
-                notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
+            }
+
+            if (data == NAK)
+            {
+                notecard_query = llGetNotecardLine(notecard_name, notecard_line);
             }
         }
     }

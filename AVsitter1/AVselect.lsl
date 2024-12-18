@@ -1,17 +1,17 @@
 /*
- * This Source Code Form is subject to the terms of the Mozilla Public 
- * License, v. 2.0. If a copy of the MPL was not distributed with this 
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * Copyright (c) the AVsitter Contributors (http://avsitter.github.io)
  * AVsitter™ is a trademark. For trademark use policy see:
  * https://avsitter.github.io/TRADEMARK.mediawiki
- * 
+ *
  * Please consider supporting continued development of AVsitter and
- * receive automatic updates and other benefits! All details and user 
+ * receive automatic updates and other benefits! All details and user
  * instructions can be found at http://avsitter.github.io
  */
- 
+
 string product_and_version = "AVsitter™ AVselect 1.62";
 integer has_security;
 integer has_texture;
@@ -179,62 +179,71 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                integer i;
-                while (llGetAgentSize(llGetLinkKey(llGetNumberOfPrims())) != ZERO_VECTOR)
+                if (data == EOF)
                 {
-                    llUnSit(llGetLinkKey(llGetNumberOfPrims()));
-                    llSleep(0.1);
+                    integer i;
+                    while (llGetAgentSize(llGetLinkKey(llGetNumberOfPrims())) != ZERO_VECTOR)
+                    {
+                        llUnSit(llGetLinkKey(llGetNumberOfPrims()));
+                        llSleep(0.1);
+                    }
+                    Owner_Say("Ready");
+                    return;
                 }
-                Owner_Say("Ready");
+                else
+                {
+                    data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
+                    data = llStringTrim(data, STRING_TRIM);
+                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                    list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
+                    string part0 = llList2String(parts, 0);
+                    if (command == "SITTER")
+                    {
+                        reading_notecard_section = (integer)part0;
+                        string button_text = llList2String(parts, 1);
+                        if (reading_notecard_section < llGetListLength(SITTERS))
+                        {
+                            if (button_text != "" && llListFindList(BUTTONS, [button_text]) == -1)
+                            {
+                                BUTTONS = llListReplaceList(BUTTONS, [button_text], reading_notecard_section, reading_notecard_section);
+                            }
+                        }
+                    }
+                    else if (command == "MTYPE")
+                    {
+                        menu_type = (integer)part0;
+                    }
+                    else if (command == "SELECT")
+                    {
+                        select_type = (integer)part0;
+                    }
+                    else if (command == "POSE" || command == "SYNC")
+                    {
+                        if (reading_notecard_section < llGetListLength(SITTERS) && reading_notecard_section != -1)
+                        {
+                            if (llList2String(BUTTONS, reading_notecard_section) == "SITTER " + (string)reading_notecard_section)
+                            {
+                                if (llStringLength(part0) > 23)
+                                {
+                                    part0 = llGetSubString(part0, 0, 22);
+                                }
+                                if (llListFindList(BUTTONS, [part0]) == -1)
+                                {
+                                    BUTTONS = llListReplaceList(BUTTONS, [part0], reading_notecard_section, reading_notecard_section);
+                                    reading_notecard_section = -1;
+                                }
+                            }
+                        }
+                    }
+                    data = llGetNotecardLineSync(notecard_name, variable1 += 1);
+                }
             }
-            else
+
+            if (data == NAK)
             {
-                data = llGetSubString(data, llSubStringIndex(data, "◆") + 1, -1);
-                data = llStringTrim(data, STRING_TRIM);
-                string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, -1), [" | ", " |", "| ", "|"], []);
-                string part0 = llList2String(parts, 0);
-                if (command == "SITTER")
-                {
-                    reading_notecard_section = (integer)part0;
-                    string button_text = llList2String(parts, 1);
-                    if (reading_notecard_section < llGetListLength(SITTERS))
-                    {
-                        if (button_text != "" && llListFindList(BUTTONS, [button_text]) == -1)
-                        {
-                            BUTTONS = llListReplaceList(BUTTONS, [button_text], reading_notecard_section, reading_notecard_section);
-                        }
-                    }
-                }
-                else if (command == "MTYPE")
-                {
-                    menu_type = (integer)part0;
-                }
-                else if (command == "SELECT")
-                {
-                    select_type = (integer)part0;
-                }
-                else if (command == "POSE" || command == "SYNC")
-                {
-                    if (reading_notecard_section < llGetListLength(SITTERS) && reading_notecard_section != -1)
-                    {
-                        if (llList2String(BUTTONS, reading_notecard_section) == "SITTER " + (string)reading_notecard_section)
-                        {
-                            if (llStringLength(part0) > 23)
-                            {
-                                part0 = llGetSubString(part0, 0, 22);
-                            }
-                            if (llListFindList(BUTTONS, [part0]) == -1)
-                            {
-                                BUTTONS = llListReplaceList(BUTTONS, [part0], reading_notecard_section, reading_notecard_section);
-                                reading_notecard_section = -1;
-                            }
-                        }
-                    }
-                }
-                notecard_query = llGetNotecardLine(notecard_name, variable1 += 1);
+                notecard_query = llGetNotecardLine(notecard_name, variable1);
             }
         }
     }

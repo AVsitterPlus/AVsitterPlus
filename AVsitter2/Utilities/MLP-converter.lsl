@@ -119,85 +119,94 @@ default
     {
         if (query_id == notecard_query)
         {
-            if (data == EOF)
+            while (data != NAK)
             {
-                if (llGetListLength(NOTECARDS) - notecard_pointer > 1)
+                if (data == EOF)
                 {
-                    notecard_name = llList2String(NOTECARDS, ++notecard_pointer);
-                    notecard_query = llGetNotecardLine(notecard_name, (notecard_line = 0));
-                }
-                else if (animator_count + 1 < animator_total)
-                {
-                    animator_count++;
-                    Readout_Say(" ");
-                    Readout_Say("SITTER " + (string)animator_count);
-                    notecard_name = llList2String(NOTECARDS, (notecard_pointer = 0));
-                    notecard_query = llGetNotecardLine(notecard_name, (notecard_line = 0));
+                    if (llGetListLength(NOTECARDS) - notecard_pointer > 1)
+                    {
+                        notecard_name = llList2String(NOTECARDS, ++notecard_pointer);
+                        notecard_query = llGetNotecardLine(notecard_name, (notecard_line = 0));
+                    }
+                    else if (animator_count + 1 < animator_total)
+                    {
+                        animator_count++;
+                        Readout_Say(" ");
+                        Readout_Say("SITTER " + (string)animator_count);
+                        notecard_name = llList2String(NOTECARDS, (notecard_pointer = 0));
+                        notecard_query = llGetNotecardLine(notecard_name, (notecard_line = 0));
+                    }
+                    else
+                    {
+                        Readout_Say(" ");
+                        Readout_Say("--✄--COPY ABOVE INTO " + notecard_basename + " NOTECARD--✄--");
+                        finish();
+                    }
+                    return;
                 }
                 else
                 {
-                    Readout_Say(" ");
-                    Readout_Say("--✄--COPY ABOVE INTO " + notecard_basename + " NOTECARD--✄--");
-                    finish();
+                    string out;
+                    data = llStringTrim(llList2String(llParseString2List(data, ["//"], []), 0), STRING_TRIM);
+                    if (llGetSubString(notecard_name, 0, 9) == ".MENUITEMS")
+                    {
+                        string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
+                        list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
+                        if (command == "TOMENU" || command == "MENU")
+                        {
+                        }
+                        else if (command == "POSE")
+                        {
+                            if (llListFindList(ommit, [llList2String(parts, 0)]) == -1)
+                            {
+                                if (llGetListLength(parts) - 1 > animator_total)
+                                {
+                                    animator_total = llGetListLength(parts) - 1;
+                                }
+                                if (llGetListLength(parts) - animator_count > 1)
+                                {
+                                    out = "POSE ";
+                                    if (llGetListLength(parts) + animator_count > 2)
+                                    {
+                                        out = "SYNC ";
+                                    }
+                                    string pose = llStringTrim(llList2String(parts, animator_count + 1), STRING_TRIM);
+                                    pose = llList2String(llParseString2List(pose, ["::"], []), 0);
+                                    pose = llList2String(llParseString2List(pose, [";"], []), 0);
+                                    out += llStringTrim(llList2String(parts, 0), STRING_TRIM) + "|" + pose;
+                                    Readout_Say(out);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (llSubStringIndex(data, "{") != -1)
+                        {
+                            string command = llStringTrim(llGetSubString(data, llSubStringIndex(data, "{") + 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
+                            if (llListFindList(ommit, [command]) == -1)
+                            {
+                                data = llDumpList2String(llParseString2List(data, [" "], [""]), "");
+                                list parts = llParseString2List(data, ["<"], []);
+                                if (llGetListLength(parts) > animator_count * 2 + 1)
+                                {
+                                    vector pos = (vector)("<" + llList2String(parts, animator_count * 2 + 1));
+                                    vector rot = (vector)("<" + llList2String(parts, animator_count * 2 + 2));
+                                    pos += (vector)llGetObjectDesc();
+                                    string result = "<" + FormatFloat(pos.x, 3) + "," + FormatFloat(pos.y, 3) + "," + FormatFloat(pos.z, 3) + ">";
+                                    result += "<" + FormatFloat(rot.x, 1) + "," + FormatFloat(rot.y, 1) + "," + FormatFloat(rot.z, 1) + ">";
+                                    Readout_Say("{" + command + "}" + result);
+                                }
+                            }
+                        }
+                    }
+                    data = llGetNotecardLineSync(notecard_name, ++notecard_line);
                 }
             }
-            else
+
+            if (data == NAK)
             {
-                string out;
-                data = llStringTrim(llList2String(llParseString2List(data, ["//"], []), 0), STRING_TRIM);
-                if (llGetSubString(notecard_name, 0, 9) == ".MENUITEMS")
-                {
-                    string command = llGetSubString(data, 0, llSubStringIndex(data, " ") - 1);
-                    list parts = llParseString2List(llGetSubString(data, llSubStringIndex(data, " ") + 1, 99999), [" | ", " |", "| ", "|"], []);
-                    if (command == "TOMENU" || command == "MENU")
-                    {
-                    }
-                    else if (command == "POSE")
-                    {
-                        if (llListFindList(ommit, [llList2String(parts, 0)]) == -1)
-                        {
-                            if (llGetListLength(parts) - 1 > animator_total)
-                            {
-                                animator_total = llGetListLength(parts) - 1;
-                            }
-                            if (llGetListLength(parts) - animator_count > 1)
-                            {
-                                out = "POSE ";
-                                if (llGetListLength(parts) + animator_count > 2)
-                                {
-                                    out = "SYNC ";
-                                }
-                                string pose = llStringTrim(llList2String(parts, animator_count + 1), STRING_TRIM);
-                                pose = llList2String(llParseString2List(pose, ["::"], []), 0);
-                                pose = llList2String(llParseString2List(pose, [";"], []), 0);
-                                out += llStringTrim(llList2String(parts, 0), STRING_TRIM) + "|" + pose;
-                                Readout_Say(out);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if (llSubStringIndex(data, "{") != -1)
-                    {
-                        string command = llStringTrim(llGetSubString(data, llSubStringIndex(data, "{") + 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
-                        if (llListFindList(ommit, [command]) == -1)
-                        {
-                            data = llDumpList2String(llParseString2List(data, [" "], [""]), "");
-                            list parts = llParseString2List(data, ["<"], []);
-                            if (llGetListLength(parts) > animator_count * 2 + 1)
-                            {
-                                vector pos = (vector)("<" + llList2String(parts, animator_count * 2 + 1));
-                                vector rot = (vector)("<" + llList2String(parts, animator_count * 2 + 2));
-                                pos += (vector)llGetObjectDesc();
-                                string result = "<" + FormatFloat(pos.x, 3) + "," + FormatFloat(pos.y, 3) + "," + FormatFloat(pos.z, 3) + ">";
-                                result += "<" + FormatFloat(rot.x, 1) + "," + FormatFloat(rot.y, 1) + "," + FormatFloat(rot.z, 1) + ">";
-                                Readout_Say("{" + command + "}" + result);
-                            }
-                        }
-                    }
-                }
-                notecard_query = llGetNotecardLine(notecard_name, ++notecard_line);
+                notecard_query = llGetNotecardLine(notecard_name, notecard_line);
             }
         }
     }
