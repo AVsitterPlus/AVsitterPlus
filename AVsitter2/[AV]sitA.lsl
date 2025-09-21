@@ -99,6 +99,35 @@ list order_buttons(list buttons)
     return llList2List(buttons, -3, -1) + llList2List(buttons, -6, -4) + llList2List(buttons, -9, -7) + llList2List(buttons, -12, -10);
 }
 
+list build_adjust_menu_items()
+{
+    list menu_items;
+    if (has_texture)
+    {
+        menu_items += "[TEXTURE]";
+    }
+    if (llGetInventoryType(expression_script) == INVENTORY_SCRIPT)
+    {
+        menu_items += "[FACES]";
+    }
+    if (has_security)
+    {
+        menu_items += "[SECURITY]";
+    }
+    integer adjust_length = llGetListLength(ADJUST_MENU);
+    integer i;
+    for (; i < adjust_length; i += 2)
+    {
+        menu_items += llList2String(ADJUST_MENU, i);
+    }
+    integer helper_present = llGetInventoryType(helper_object) == INVENTORY_OBJECT;
+    if (helper_present && llGetInventoryType(adjust_script) == INVENTORY_SCRIPT)
+    {
+        menu_items += "[HELPER]";
+    }
+    return menu_items;
+}
+
 integer get_number_of_scripts()
 {
     integer i;
@@ -122,36 +151,13 @@ dialog(string text, list menu_items)
 
 options_menu()
 {
-    list menu_items;
-    if (has_texture)
-    {
-        menu_items += "[TEXTURE]";
-    }
-    if (llGetInventoryType(expression_script) == INVENTORY_SCRIPT)
-    {
-        menu_items += "[FACES]";
-    }
-    if (has_security)
-    {
-        menu_items += "[SECURITY]";
-    }
-    integer i;
-    while (i < llGetListLength(ADJUST_MENU))
-    {
-        menu_items += llList2String(ADJUST_MENU, i);
-        i = i + 2;
-    }
-    if (llGetInventoryType(helper_object) == INVENTORY_OBJECT && llGetInventoryType(adjust_script) == INVENTORY_SCRIPT)
-    {
-        menu_items += "[HELPER]";
-    }
+    list menu_items = build_adjust_menu_items();
     if (!llGetListLength(menu_items))
     {
         adjust_pose_menu();
         return;
     }
-    menu_items += "[POSE]";
-    dialog("Adjust:", ["[BACK]"] + menu_items);
+    dialog("Adjust:", ["[BACK]"] + menu_items + ["[POSE]"]);
 }
 
 adjust_pose_menu()
@@ -194,7 +200,8 @@ sittargets()
 {
     wrong_primcount = FALSE;
     prims = llGetObjectPrimCount(llGetKey());
-    if (llGetListLength(SITTERS) > prims && WARN)
+    integer sitter_count = llGetListLength(SITTERS);
+    if (sitter_count > prims && WARN)
     {
         if (!SCRIPT_CHANNEL)
         {
@@ -206,14 +213,14 @@ sittargets()
     integer i;
     SITTERS_SITTARGETS = [];
     list ASSIGNED_SITTARGETS = [];
-    if (llGetListLength(SITTERS) == 1)
+    if (sitter_count == 1)
     {
         my_sittarget = llGetLinkNumber();
         SITTERS_SITTARGETS += my_sittarget;
     }
     else
     {
-        for (i = 0; i < llGetListLength(SITTERS); i++)
+        for (i = 0; i < sitter_count; i++)
         {
             SITTERS_SITTARGETS += 1000;
             ASSIGNED_SITTARGETS += FALSE;
@@ -476,7 +483,8 @@ default
         else
         {
             // wipe_sit_targets() inlined here:
-            for (i = 0; i <= llGetNumberOfPrims(); i++)
+            integer total_prims = llGetNumberOfPrims();
+            for (i = 0; i <= total_prims; i++)
             {
                 string desc = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
                 if (desc != "-1" && "#-1" != llGetSubString(desc, -3, -1))
@@ -765,36 +773,13 @@ default
                 if ((msg = llList2String(data, 1)) == "[ADJUST]") // WARNING: reusing msg
                 {
                     // options_menu() inlined here:
-                    data = [];
-                    if (has_texture)
-                    {
-                        data += "[TEXTURE]";
-                    }
-                    if (llGetInventoryType(expression_script) == INVENTORY_SCRIPT)
-                    {
-                        data += "[FACES]";
-                    }
-                    if (has_security)
-                    {
-                        data += "[SECURITY]";
-                    }
-                    integer i;
-                    while (i < llGetListLength(ADJUST_MENU))
-                    {
-                        data += llList2String(ADJUST_MENU, i);
-                        i = i + 2;
-                    }
-                    if (llGetInventoryType(helper_object) == INVENTORY_OBJECT && llGetInventoryType(adjust_script) == INVENTORY_SCRIPT)
-                    {
-                        data += "[HELPER]";
-                    }
+                    data = build_adjust_menu_items();
                     if (!llGetListLength(data))
                     {
                         adjust_pose_menu();
                         return;
                     }
-                    data += "[POSE]";
-                    dialog("Adjust:", ["[BACK]"] + data);
+                    dialog("Adjust:", ["[BACK]"] + data + ["[POSE]"]);
                     return;
                 }
                 if (msg == "Harder >>" || msg == "<< Softer")
@@ -807,9 +792,12 @@ default
                     // target here means target script
                     target = SCRIPT_CHANNEL + 1;
                     list X = SITTERS + SITTERS;
+                    integer sitter_count = llGetListLength(SITTERS);
+                    integer x_length = llGetListLength(X);
+                    integer swap_limit = sitter_count + SCRIPT_CHANNEL + 1;
                     if (llSubStringIndex(CURRENT_POSE_NAME, "P:"))
                     {
-                        while (llList2Key(X, target) == "" && target + 1 < llGetListLength(X))
+                        while (llList2Key(X, target) == "" && target + 1 < x_length)
                         {
                             target++;
                         }
@@ -820,12 +808,12 @@ default
                     }
                     else
                     {
-                        while (llList2String(X, target) != "" && target < llGetListLength(SITTERS) + SCRIPT_CHANNEL + 1)
+                        while (llList2String(X, target) != "" && target < swap_limit)
                         {
                             target++;
                         }
                     }
-                    target %= llGetListLength(SITTERS);
+                    target %= sitter_count;
                     llMessageLinked(LINK_THIS, 90030, (string)SCRIPT_CHANNEL, (string)target);
                 }
                 return;
@@ -868,11 +856,12 @@ default
     changed(integer change)
     {
         integer i;
+        integer sitter_count = llGetListLength(SITTERS);
         if (change & CHANGED_LINK)
         {
             SWAPPED = FALSE;
             integer stood;
-            if (SET == -1 && llGetListLength(SITTERS) > 1)
+            if (SET == -1 && sitter_count > 1)
             {
                 list AVPRIMS;
                 i = llGetNumberOfPrims();
@@ -884,7 +873,7 @@ default
                         integer first_available = llListFindList(SITTERS, [""]);
                         integer first_unassigned = -1;
                         integer j;
-                        while (j < llGetListLength(SITTERS))
+                        while (j < sitter_count)
                         {
                             if (llList2String(SITTERS, j) == "")
                             {
@@ -940,7 +929,7 @@ default
                     AVPRIMS += llGetLinkKey(i);
                     i--;
                 }
-                for (i = 0; i < llGetListLength(SITTERS); i++)
+                for (i = 0; i < sitter_count; i++)
                 {
                     if (llList2String(SITTERS, i) != "" && llListFindList(AVPRIMS, [llList2Key(SITTERS, i)]) == -1)
                     {
@@ -968,11 +957,11 @@ default
             }
             else
             {
-                for (i = 0; i < llGetListLength(SITTERS); i++)
+                for (i = 0; i < sitter_count; i++)
                 {
                     string existing_sitter = llList2String(SITTERS, i);
                     key actual_sitter = llAvatarOnLinkSitTarget(llList2Integer(SITTERS_SITTARGETS, i));
-                    if (llGetListLength(SITTERS) == 1)
+                    if (sitter_count == 1)
                     {
                         actual_sitter = llAvatarOnSitTarget();
                     }
@@ -1045,7 +1034,8 @@ default
                 if (!SCRIPT_CHANNEL)
                 {
                     // wipe_sit_targets() inlined here:
-                    for (i = 0; i <= llGetNumberOfPrims(); i++)
+                    integer total_prims = llGetNumberOfPrims();
+                    for (i = 0; i <= total_prims; i++)
                     {
                         string desc = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
                         if (desc != "-1" && "#-1" != llGetSubString(desc, -3, -1))
@@ -1067,9 +1057,10 @@ default
         if (change & CHANGED_INVENTORY)
         {
             // get_number_of_scripts() inlined here:
-            while (llGetInventoryType(main_script + " " + (string)(++i)) == INVENTORY_SCRIPT)
+            integer script_count;
+            while (llGetInventoryType(main_script + " " + (string)(++script_count)) == INVENTORY_SCRIPT)
                 ;
-            if (llGetInventoryKey(notecard_name) != notecard_key || i != llGetListLength(SITTERS) || llGetInventoryType(memoryscript) != INVENTORY_SCRIPT)
+            if (llGetInventoryKey(notecard_name) != notecard_key || script_count != sitter_count || llGetInventoryType(memoryscript) != INVENTORY_SCRIPT)
             {
                 end_sitter();
                 llResetScript();
