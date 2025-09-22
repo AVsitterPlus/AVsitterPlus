@@ -76,6 +76,36 @@ memory()
     llOwnerSay(llGetScriptName() + "[" + version + "] " + (string)llGetListLength(MENU_LIST) + " Items Ready, Mem=" + (string)(65536 - llGetUsedMemory()));
 }
 
+integer has_speed_variant(string base_name)
+{
+    string trimmed_base = llStringTrim(base_name, STRING_TRIM_TAIL);
+    integer anim_count = llGetInventoryNumber(INVENTORY_ANIMATION);
+    integer i;
+    for (i = 0; i < anim_count; ++i)
+    {
+        string candidate = llGetInventoryName(INVENTORY_ANIMATION, i);
+        integer candidate_length = llStringLength(candidate);
+        if (candidate_length)
+        {
+            string suffix = llGetSubString(candidate, candidate_length - 1, candidate_length - 1);
+            if (suffix == "+" || suffix == "-")
+            {
+                string candidate_base = "";
+                if (candidate_length > 1)
+                {
+                    candidate_base = llGetSubString(candidate, 0, candidate_length - 2);
+                }
+                candidate_base = llStringTrim(candidate_base, STRING_TRIM_TAIL);
+                if (candidate_base == trimmed_base)
+                {
+                    return TRUE;
+                }
+            }
+        }
+    }
+    return FALSE;
+}
+
 integer animation_menu(integer animation_menu_function)
 {
     integer select_available = llGetInventoryType(select_script) == INVENTORY_SCRIPT;
@@ -112,7 +142,7 @@ integer animation_menu(integer animation_menu_function)
         {
             CURRENT_POSE_NAME = llList2String(MENU_LIST, ANIM_INDEX);
             menu += " [" + llList2String(llParseString2List(CURRENT_POSE_NAME, ["P:"], []), 0);
-            if (llGetInventoryType(animation_file + "+") == INVENTORY_ANIMATION)
+            if (has_speed_variant(animation_file))
             {
                 if (speed_index < 0)
                 {

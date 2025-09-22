@@ -637,14 +637,56 @@ set_sittarget()
     }
 }
 
+string find_speed_variant(string base_name, string speed_text)
+{
+    if (speed_text == "")
+    {
+        return base_name;
+    }
+    string trimmed_base = llStringTrim(base_name, STRING_TRIM_TAIL);
+    integer anim_count = llGetInventoryNumber(INVENTORY_ANIMATION);
+    integer i;
+    for (i = 0; i < anim_count; ++i)
+    {
+        string candidate = llGetInventoryName(INVENTORY_ANIMATION, i);
+        integer candidate_length = llStringLength(candidate);
+        if (candidate_length && llGetSubString(candidate, candidate_length - 1, candidate_length - 1) == speed_text)
+        {
+            string candidate_base = "";
+            if (candidate_length > 1)
+            {
+                candidate_base = llGetSubString(candidate, 0, candidate_length - 2);
+            }
+            candidate_base = llStringTrim(candidate_base, STRING_TRIM_TAIL);
+            if (candidate_base == trimmed_base)
+            {
+                return candidate;
+            }
+        }
+    }
+    return base_name;
+}
+
 update_current_anim_name()
 {
     list SEQUENCE = llParseStringKeepNulls(CURRENT_ANIMATION_SEQUENCE, [SEP], []);
     CURRENT_ANIMATION_FILENAME = llList2String(SEQUENCE, SEQUENCE_POINTER);
     string speed_text = llList2String(["", "+", "-"], speed_index);
-    if (llGetInventoryType(CURRENT_ANIMATION_FILENAME + speed_text) == INVENTORY_ANIMATION)
+    if (speed_text != "")
     {
-        CURRENT_ANIMATION_FILENAME += speed_text;
+        string speed_variant = find_speed_variant(CURRENT_ANIMATION_FILENAME, speed_text);
+        if (speed_variant != CURRENT_ANIMATION_FILENAME)
+        {
+            CURRENT_ANIMATION_FILENAME = speed_variant;
+        }
+        else
+        {
+            string legacy_variant = CURRENT_ANIMATION_FILENAME + speed_text;
+            if (llGetInventoryType(legacy_variant) == INVENTORY_ANIMATION)
+            {
+                CURRENT_ANIMATION_FILENAME = legacy_variant;
+            }
+        }
     }
     llSetTimerEvent((float)llList2String(SEQUENCE, SEQUENCE_POINTER + 1));
 }
