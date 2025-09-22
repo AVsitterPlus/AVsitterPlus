@@ -67,6 +67,8 @@ key notecard_key;
 key notecard_query;
 integer reading_notecard_section;
 integer notecard_lines_read;
+integer NOTECARD_PROGRESS_STEP = 32;
+integer notecard_progress_next_update;
 key reused_key;
 integer reused_variable;
 integer my_sittarget;
@@ -88,11 +90,6 @@ string SEP = "�"; // OSS::string SEP = "\x7F";
 
 integer NOTECARD_TARGET_BROADCAST = -1;
 integer notecard_section_channel = -1;
-string parsed_notecard_data;
-string parsed_notecard_command;
-list parsed_notecard_parts;
-string parsed_notecard_part0;
-string parsed_notecard_part1;
 
 integer MSG_NOTECARD_LINE = 90310;
 integer MSG_NOTECARD_DONE = 90311;
@@ -142,29 +139,6 @@ list build_adjust_menu_items()
     return menu_items;
 }
 
-parse_notecard_line(string raw_data)
-{
-    parsed_notecard_data = llGetSubString(raw_data, llSubStringIndex(raw_data, "◆") + 1, 99999);
-    parsed_notecard_data = llStringTrim(parsed_notecard_data, STRING_TRIM_HEAD);
-    integer space_index = llSubStringIndex(parsed_notecard_data, " ");
-    parsed_notecard_parts = [];
-    parsed_notecard_part0 = "";
-    parsed_notecard_part1 = "";
-    if (space_index == -1)
-    {
-        parsed_notecard_command = parsed_notecard_data;
-        return;
-    }
-    parsed_notecard_command = llGetSubString(parsed_notecard_data, 0, space_index - 1);
-    string args = llGetSubString(parsed_notecard_data, space_index + 1, 99999);
-    parsed_notecard_parts = llParseStringKeepNulls(args, [" | ", " |", "| ", "|"], []);
-    parsed_notecard_part0 = llStringTrim(llList2String(parsed_notecard_parts, 0), STRING_TRIM);
-    if (llGetListLength(parsed_notecard_parts) > 1)
-    {
-        parsed_notecard_part1 = llStringTrim(llDumpList2String(llList2List(parsed_notecard_parts, 1, 99999), SEP), STRING_TRIM);
-    }
-}
-
 integer is_global_notecard_command(string command)
 {
     return command == "MTYPE"
@@ -185,43 +159,65 @@ integer is_global_notecard_command(string command)
         || command == "ADJUST";
 }
 
-integer determine_notecard_forward_target()
+integer process_notecard_line(string raw_data)
 {
-    integer target = NOTECARD_TARGET_BROADCAST;
-    string command = parsed_notecard_command;
-    if (command == "")
+    notecard_finalized = FALSE;
+    integer marker = llSubStringIndex(raw_data, "◆");
+    string data = raw_data;
+    if (marker != -1)
     {
-        return target;
+        data = llGetSubString(raw_data, marker + 1, -1);
     }
+    data = llStringTrim(data, STRING_TRIM);
+    integer space_index = llSubStringIndex(data, " ");
+    string command = "";
+    list parts = [];
+    string part0 = "";
+    string part1 = "";
+    if (space_index == -1)
+    {
+        command = data;
+    }
+    else
+    {
+        command = llGetSubString(data, 0, space_index - 1);
+        string argument_data = llGetSubString(data, space_index + 1, -1);
+        list raw_parts = llParseStringKeepNulls(argument_data, ["|"], []);
+        integer raw_length = llGetListLength(raw_parts);
+        integer idx;
+        while (idx < raw_length)
+        {
+            parts += llStringTrim(llList2String(raw_parts, idx), STRING_TRIM);
+            idx++;
+        }
+        if (raw_length)
+        {
+            part0 = llList2String(parts, 0);
+            if (raw_length > 1)
+            {
+                part1 = llDumpList2String(llList2List(parts, 1, -1), SEP);
+            }
+        }
+    }
+    string first_char = llGetSubString(data, 0, 0);
     if (command == "SITTER")
     {
-        notecard_section_channel = (integer)parsed_notecard_part0;
-        return target;
+        notecard_section_channel = (integer)part0;
     }
+    integer forward_target = NOTECARD_TARGET_BROADCAST;
     integer section_line = FALSE;
-    if (llGetSubString(parsed_notecard_data, 0, 0) == "{")
+    if (first_char == "{")
     {
         section_line = TRUE;
     }
-    else if (notecard_section_channel != -1 && command != "" && !is_global_notecard_command(command))
+    else if (notecard_section_channel != -1 && command != "" && command != "SITTER" && !is_global_notecard_command(command))
     {
         section_line = TRUE;
     }
     if (section_line)
     {
-        target = notecard_section_channel;
+        forward_target = notecard_section_channel;
     }
-    return target;
-}
-
-handle_parsed_notecard_line()
-{
-    notecard_finalized = FALSE;
-    string data = parsed_notecard_data;
-    string command = parsed_notecard_command;
-    list parts = parsed_notecard_parts;
-    string part0 = parsed_notecard_part0;
-    string part1 = parsed_notecard_part1;
     if (command == "SITTER")
     {
         reading_notecard_section = FALSE;
@@ -245,7 +241,7 @@ handle_parsed_notecard_line()
                 SITTER_INFO = llList2List(parts, 1, 99999);
             }
         }
-        return;
+        return forward_target;
     }
     if (command == "MTYPE")
     {
@@ -255,97 +251,120 @@ handle_parsed_notecard_line()
         {
             llPassTouches(TRUE);
         }
-        return;
+        return forward_target;
     }
     if (command == "ROLES")
     {
         RLVDesignations = (string)parts;
-        return;
+        return forward_target;
     }
     if (command == "ETYPE")
     {
         ETYPE = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "SELECT")
     {
         SELECT = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "WARN")
     {
         WARN = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "TEXT")
     {
         CUSTOM_TEXT = llDumpList2String(llParseStringKeepNulls(part0, ["\\n"], []), "\n");
-        return;
+        return forward_target;
     }
     if (command == "SWAP")
     {
         SWAP = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "AMENU")
     {
         AMENU = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "HELPER")
     {
         OLD_HELPER_METHOD = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "SET")
     {
         SET = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "KFM")
     {
         HASKEYFRAME = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "LROT")
     {
         REFERENCE = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "BRAND")
     {
         BRAND = part0;
-        return;
+        return forward_target;
     }
     if (command == "DFLT")
     {
         DFLT = (integer)part0;
-        return;
+        return forward_target;
     }
     if (command == "ONSIT")
     {
         onSit = part0;
-        return;
+        return forward_target;
     }
     if (command == "ADJUST")
     {
         ADJUST_MENU = parts;
-        return;
+        return forward_target;
     }
     if (reading_notecard_section)
     {
-        if (llGetSubString(data, 0, 0) == "{")
+        if (first_char == "{")
         {
-            command = llStringTrim(llGetSubString(data, 1, llSubStringIndex(data, "}") - 1), STRING_TRIM);
-            parts = llParseStringKeepNulls(llDumpList2String(llParseString2List(llGetSubString(data, llSubStringIndex(data, "}") + 1, 99999), [" "], [""]), ""), ["<"], []);
-            string pos = "<" + llList2String(parts, 1);
-            string rot = "<" + llList2String(parts, 2);
-            if (command == FIRST_POSENAME || "P:" + command == FIRST_POSENAME)
+            integer close_brace = llSubStringIndex(data, "}");
+            if (close_brace != -1)
             {
-                FIRST_POSITION = DEFAULT_POSITION = CURRENT_POSITION = (vector)pos;
-                FIRST_ROTATION = DEFAULT_ROTATION = CURRENT_ROTATION = (vector)rot;
+                command = llStringTrim(llGetSubString(data, 1, close_brace - 1), STRING_TRIM);
+                string remainder = llStringTrim(llGetSubString(data, close_brace + 1, -1), STRING_TRIM);
+                integer pos_start = llSubStringIndex(remainder, "<");
+                if (pos_start != -1)
+                {
+                    string pos_block = llGetSubString(remainder, pos_start, -1);
+                    integer pos_end = llSubStringIndex(pos_block, ">");
+                    if (pos_end != -1)
+                    {
+                        string pos = llStringTrim(llGetSubString(pos_block, 0, pos_end), STRING_TRIM);
+                        string rot_block = llStringTrim(llGetSubString(pos_block, pos_end + 1, -1), STRING_TRIM);
+                        integer rot_start = llSubStringIndex(rot_block, "<");
+                        if (rot_start != -1)
+                        {
+                            rot_block = llGetSubString(rot_block, rot_start, -1);
+                            integer rot_end = llSubStringIndex(rot_block, ">");
+                            if (rot_end != -1)
+                            {
+                                string rot = llStringTrim(llGetSubString(rot_block, 0, rot_end), STRING_TRIM);
+                                if (command == FIRST_POSENAME || "P:" + command == FIRST_POSENAME)
+                                {
+                                    FIRST_POSITION = DEFAULT_POSITION = CURRENT_POSITION = (vector)pos;
+                                    FIRST_ROTATION = DEFAULT_ROTATION = CURRENT_ROTATION = (vector)rot;
+                                }
+                                llMessageLinked(LINK_THIS, 90301, (string)SCRIPT_CHANNEL, command + "|" + pos + "|" + rot); // 90301=send update to AVsitB
+                            }
+                        }
+                    }
+                }
             }
-            llMessageLinked(LINK_THIS, 90301, (string)SCRIPT_CHANNEL, command + "|" + pos + "|" + rot); // 90301=send update to AVsitB
         }
         else
         {
@@ -393,13 +412,7 @@ handle_parsed_notecard_line()
             }
         }
     }
-}
-
-process_notecard_line(string raw_data)
-{
-    parse_notecard_line(raw_data);
-    determine_notecard_forward_target();
-    handle_parsed_notecard_line();
+    return forward_target;
 }
 
 finalize_notecard_loading()
@@ -773,6 +786,8 @@ default
         notecard_finalized = FALSE;
         is_notecard_loader = (SCRIPT_CHANNEL == 0);
         notecard_lines_read = 0;
+        notecard_section_channel = -1;
+        notecard_progress_next_update = 1;
         if (SCRIPT_CHANNEL)
         {
             memoryscript += " " + (string)SCRIPT_CHANNEL;
@@ -1458,15 +1473,18 @@ default
             }
             if (is_notecard_loader)
             {
-                llSetText("Loading (" + (string)(++notecard_lines_read) + " lines)", <1,1,0>, 1);
-                parse_notecard_line(data);
-                integer forward_target = determine_notecard_forward_target();
+                notecard_lines_read++;
+                if (notecard_lines_read >= notecard_progress_next_update)
+                {
+                    llSetText("Loading (" + (string)notecard_lines_read + " lines)", <1,1,0>, 1);
+                    notecard_progress_next_update = notecard_lines_read + NOTECARD_PROGRESS_STEP;
+                }
+                integer forward_target = process_notecard_line(data);
                 if (forward_target != SCRIPT_CHANNEL)
                 {
                     llMessageLinked(LINK_SET, MSG_NOTECARD_LINE, data, (string)forward_target);
                 }
                 notecard_query = llGetNotecardLine(notecard_name, ++reused_variable);
-                handle_parsed_notecard_line();
                 return;
             }
             process_notecard_line(data);
