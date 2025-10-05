@@ -16,7 +16,7 @@
  */
 
 string product = "AVsitter™";
-string #version = "2.2p04";
+string version = "2.2p04";
 string BRAND;
 integer OLD_HELPER_METHOD;
 string main_script = "[AV]sitA";
@@ -206,11 +206,18 @@ integer animation_menu(integer animation_menu_function)
         {
             menu_items0 += "[BACK]";
         }
-        string submenu_info;
+       string submenu_info = "";
         if (current_menu != -1)
         {
-            submenu_info = llList2String(DATA_LIST, current_menu);
+            string m = llList2String(MENU_LIST, current_menu);        // "M:<name>"
+            if (llGetSubString(m, 0, 1) == "M:")
+            {
+                string mname = llGetSubString(m, 2, -1);
+                submenu_info = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags");
+                // ok if "", old builds without flags stay compatible
+            }
         }
+
         if (helper_mode)
         {
             menu_items2 += "[NEW]";
@@ -634,6 +641,25 @@ default
                 }
                 MENU_LIST = llListInsertList(MENU_LIST, [llList2String(data, 0)], place_to_add);
                 DATA_LIST = llListInsertList(DATA_LIST, [llList2String(data, 1)], place_to_add);
+                // After insert, trim memory by moving MENU flags to LSD and keeping DATA_LIST
+                // only for buttons. Identify entry type by prefix.
+                string entry = llList2String(MENU_LIST, place_to_add);
+                string head  = llGetSubString(entry, 0, 1); // "M:", "P:", "T:", "B:"
+                
+                if (head == "M:") {
+                    string mname = llGetSubString(entry, 2, -1);
+                    string flags = llList2String(data, 1);
+                    llLinksetDataWrite("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags", flags);
+                    DATA_LIST = llListReplaceList(DATA_LIST, [""], place_to_add, place_to_add);
+                }
+                else if (head == "P:") {
+                    DATA_LIST = llListReplaceList(DATA_LIST, [""], place_to_add, place_to_add);
+                }
+                else if (head == "T:") {
+                    DATA_LIST = llListReplaceList(DATA_LIST, [""], place_to_add, place_to_add);
+                }
+                // "B:" rows keep DATA_LIST as-is.
+
                 if (llGetListLength(data) == 4)
                 {
                     string menu_name = llList2String(MENU_LIST, place_to_add);
@@ -725,11 +751,20 @@ default
                 while (++i < llGetListLength(MENU_LIST))
                 {
                     llSleep(0.5);
-                    llMessageLinked(LINK_THIS, 90022
-                                   ,   "S:" + llList2String(MENU_LIST, i)
-                                     + "|" + llList2String(DATA_LIST, i)
-                                   , (string)SCRIPT_CHANNEL
-                                   );
+                    string mi = llList2String(MENU_LIST, i);
+                    string payload = llList2String(DATA_LIST, i);   // default (works for buttons)
+                    if (llGetSubString(mi, 0, 1) == "M:")
+                    {
+                        string mname = llGetSubString(mi, 2, -1);
+                        string flags = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags");
+                        if (flags != "") payload = flags;           // reconstruct legacy dump
+                    }
+                    
+                    llMessageLinked(LINK_THIS, 90022,
+                        "S:" + mi + "|" + payload,
+                        (string)SCRIPT_CHANNEL
+                    );
+
                 }
                 i = -1;
                while (++i < llGetListLength(MENU_LIST))
