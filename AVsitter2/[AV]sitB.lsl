@@ -33,7 +33,6 @@ string CUSTOM_TEXT;
 string ADJUST_MENU;
 string SITTER_INFO;
 list MENU_LIST;
-list DATA_LIST;
 integer helper_mode;
 integer has_RLV;
 integer ANIM_INDEX;
@@ -42,7 +41,6 @@ integer menu_handle;
 integer menu_channel;
 integer current_menu = -1;
 integer last_menu;
-string submenu_info;
 integer menu_page;
 key MY_SITTER;
 key CONTROLLER;
@@ -52,17 +50,8 @@ integer speed_index;
 integer verbose = 0;
 string SEP = "�"; // OSS::string SEP = "\x7F";
 
-/* --- LSD read helpers (tiny & safe) --- */
-string AVP_LSD_PFX = "AVS2:AVPOS:";
-string avp_lsd_key(integer sitter, string kind, string name, string field) {
-    return AVP_LSD_PFX + "S" + (string)sitter + ":" + kind + ":" + name + ":" + field;
-}
-string avp_lsd_read(string k) { return llLinksetDataRead(k); }
-vector avp_read_vec(string k, vector fallback) {
-    string s = avp_lsd_read(k);
-    if (s != "") return (vector)s;
-    return fallback;
-}
+
+
 string avp_pose_kind_from_menu(string menuname) {
     if (llGetSubString(menuname, 0, 1) == "P:")
         return "P";
@@ -87,7 +76,6 @@ send_anim_info(integer broadcast)
 {
     // Current selection
     string pose_menu_name = llList2String(MENU_LIST, ANIM_INDEX);  // e.g. "P:Skipper" or "Doggy 1"
-    string data_seq_full  = llList2String(DATA_LIST, ANIM_INDEX);  // notecard sequence as fallback
 
     // Determine kind and clean name (no ?: operator)
     string kind;
@@ -107,12 +95,21 @@ send_anim_info(integer broadcast)
     // LSD keys
     string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
     string seq  = llLinksetDataRead(base + "seq");
-
     if (seq == "")
-    {
-        seq = data_seq_full; // fallback to notecard sequence
-    }
-
+        {
+            string fallbackAnim = avp_clean_pose_name(pose_menu_name);
+            // Only fallback if there’s an actual animation with that name
+            if (llGetInventoryType(fallbackAnim) == INVENTORY_ANIMATION)
+            {
+                seq = fallbackAnim; // AVsitter treats a bare token as the anim filename
+            }
+            else
+            {
+                // No safe fallback—skip sending to avoid starting a blank anim
+                return;
+            }
+        }
+   
     // Position/Rotation from LSD (these always exist after notecard parse)
     vector p = (vector)llLinksetDataRead(base + "p");
     vector r = (vector)llLinksetDataRead(base + "r");
@@ -354,7 +351,16 @@ default
         if (index != -1)
         {
             index += current_menu + 1;
-            list button_data = llParseStringKeepNulls(llList2String(DATA_LIST, index), [SEP], []);
+            string entry = llList2String(MENU_LIST, index);
+            string blabel = llGetSubString(entry, 2, -1);
+            string bkey = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":B:" + blabel;
+            string bpayload = llLinksetDataRead(bkey);
+            // If the button has no stored payload, ignore the click safely.
+            if (bpayload == "")
+            {
+                return;
+            }
+            list button_data = llParseStringKeepNulls(bpayload, [SEP], []);
             if (llList2String(button_data, 1) != "")
             {
                 msg = llList2String(button_data, 1);
@@ -603,7 +609,6 @@ default
             if (num == 90299)
             {
                 MENU_LIST =  [];
-                DATA_LIST = [];
                 // Optional, keeps state tidy during a full rebuild:
                 FIRST_INDEX = -1;
                 ANIM_INDEX  = -1;
@@ -640,47 +645,57 @@ default
                     }
                 }
                 MENU_LIST = llListInsertList(MENU_LIST, [llList2String(data, 0)], place_to_add);
-                DATA_LIST = llListInsertList(DATA_LIST, [llList2String(data, 1)], place_to_add);
+                
                 // After insert, trim memory by moving MENU flags to LSD and keeping DATA_LIST
                 // only for buttons. Identify entry type by prefix.
                 string entry = llList2String(MENU_LIST, place_to_add);
-                string head  = llGetSubString(entry, 0, 1); // "M:", "P:", "T:", "B:"
-                
-                if (head == "M:") {
+                string head = llGetSubString(entry, 0, 0); // "M" / "P" / "T" / "B" or first char of Y pose
+                if (head == "M") {
                     string mname = llGetSubString(entry, 2, -1);
                     string flags = llList2String(data, 1);
                     llLinksetDataWrite("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags", flags);
-                    DATA_LIST = llListReplaceList(DATA_LIST, [""], place_to_add, place_to_add);
                 }
-                else if (head == "P:") {
-                    DATA_LIST = llListReplaceList(DATA_LIST, [""], place_to_add, place_to_add);
+                else if (head == "B") { // "B:<label>"
+                    string blabel = llGetSubString(entry, 2, -1);
+                    string bkey = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":B:" + blabel;
+                    llLinksetDataWrite(bkey, llList2String(data, 1)); // legacy "n|msg|id"
                 }
-                else if (head == "T:") {
-                    DATA_LIST = llListReplaceList(DATA_LIST, [""], place_to_add, place_to_add);
+                else if (head == "T") {
+                    // no payload for titles
                 }
-                // "B:" rows keep DATA_LIST as-is.
-
-                if (llGetListLength(data) == 4)
-                {
-                    string menu_name = llList2String(MENU_LIST, place_to_add);
-                    string kind; string name;
-                    if (llGetSubString(menu_name, 0, 1) == "P:") { kind = "P"; name = llGetSubString(menu_name, 2, -1); }
-                    else { kind = "Y"; name = menu_name; }
+                else {
+                    // Pose row: either "P:<name>" or a plain Y pose
+                    string kind;
+                    string name;
+                
+                    if (llGetSubString(entry, 0, 1) == "P:") {
+                        kind = "P";
+                        name = llGetSubString(entry, 2, -1);
+                    } else {
+                        kind = "Y";
+                        name = entry; // whole entry is the pose name
+                    }
                 
                     string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
-                    // data[1] is seq (already written by [AV]sitA helper), data[2]=pos, data[3]=rot
-                    llLinksetDataWrite(base + "p", llList2String(data, 2));
-                    llLinksetDataWrite(base + "r", llList2String(data, 3));
                 
-                    // Trim memory: pose rows don’t need DATA_LIST anymore
-                    DATA_LIST = llListReplaceList(DATA_LIST, [""], place_to_add, place_to_add);
+                    // always store sequence
+                    llLinksetDataWrite(base + "seq", llList2String(data, 1));
                 
+                    // if provided, also store pos/rot
+                    if (llGetListLength(data) >= 4) {
+                        llLinksetDataWrite(base + "p", llList2String(data, 2));
+                        llLinksetDataWrite(base + "r", llList2String(data, 3));
+                    }
+                
+                    // optional: autoselect newly added pose
                     ANIM_INDEX = place_to_add;
                     send_anim_info(TRUE);
                     memory();
                     return;
                 }
 
+                // "T" rows have no payload to persist
+                
                 return;
             }
            if (num == 90301)
@@ -752,18 +767,31 @@ default
                 {
                     llSleep(0.5);
                     string mi = llList2String(MENU_LIST, i);
-                    string payload = llList2String(DATA_LIST, i);   // default (works for buttons)
-                    if (llGetSubString(mi, 0, 1) == "M:")
-                    {
+                    string payload = "";
+                    // detect kind from prefix
+                    if (llGetSubString(mi, 0, 1) == "M:") {
                         string mname = llGetSubString(mi, 2, -1);
-                        string flags = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags");
-                        if (flags != "") payload = flags;           // reconstruct legacy dump
+                        payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags");
+                    }
+                    else if (llGetSubString(mi, 0, 1) == "P:") {
+                        string name = llGetSubString(mi, 2, -1);
+                        payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":P:" + name + ":seq");
+                    }
+                    else if (llGetSubString(mi, 0, 1) == "B:") {
+                        string blabel = llGetSubString(mi, 2, -1);
+                        payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":B:" + blabel);
+                    }
+                    else if (llGetSubString(mi, 0, 1) == "T:") {
+                        // titles: no payload
+                    }
+                    else {
+                        // Y pose (no prefix)
+                        string name = mi;
+                        payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":Y:" + name + ":seq");
                     }
                     
-                    llMessageLinked(LINK_THIS, 90022,
-                        "S:" + mi + "|" + payload,
-                        (string)SCRIPT_CHANNEL
-                    );
+                    llMessageLinked(LINK_THIS, 90022, "S:" + mi + "|" + payload, (string)SCRIPT_CHANNEL);
+
 
                 }
                 i = -1;
