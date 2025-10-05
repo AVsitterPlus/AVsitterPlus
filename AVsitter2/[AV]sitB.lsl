@@ -1,3 +1,4 @@
+/* --------------- [AV]sitB (unchanged logic) --------------- */
 /*
  * [AV]sitB - Main Memory script - needs [AV]sitA to work
  *
@@ -31,10 +32,8 @@ integer number_of_sitters;
 string CUSTOM_TEXT;
 string ADJUST_MENU;
 string SITTER_INFO;
-string SITTER_LABEL;
 list MENU_LIST;
 list DATA_LIST;
-list POS_ROT_LIST = [CUSTOM_TEXT]; //OSS::list POS_ROT_LIST; // Force error in LSO
 integer helper_mode;
 integer has_RLV;
 integer ANIM_INDEX;
@@ -53,6 +52,29 @@ integer speed_index;
 integer verbose = 0;
 string SEP = "�"; // OSS::string SEP = "\x7F";
 
+/* --- LSD read helpers (tiny & safe) --- */
+string AVP_LSD_PFX = "AVS2:AVPOS:";
+string avp_lsd_key(integer sitter, string kind, string name, string field) {
+    return AVP_LSD_PFX + "S" + (string)sitter + ":" + kind + ":" + name + ":" + field;
+}
+string avp_lsd_read(string k) { return llLinksetDataRead(k); }
+vector avp_read_vec(string k, vector fallback) {
+    string s = avp_lsd_read(k);
+    if (s != "") return (vector)s;
+    return fallback;
+}
+string avp_pose_kind_from_menu(string menuname) {
+    if (llGetSubString(menuname, 0, 1) == "P:")
+        return "P";
+    return "Y";
+}
+string avp_clean_pose_name(string menuname) {
+    if (llGetSubString(menuname, 0, 1) == "P:")
+        return llGetSubString(menuname, 2, -1);
+    return menuname;
+}
+
+
 Out(integer level, string out)
 {
     if (verbose >= level)
@@ -61,55 +83,59 @@ Out(integer level, string out)
     }
 }
 
-list order_buttons(list buttons)
-{
-    return llList2List(buttons, -3, -1) + llList2List(buttons, -6, -4) + llList2List(buttons, -9, -7) + llList2List(buttons, -12, -10);
-}
-
 send_anim_info(integer broadcast)
 {
-    llMessageLinked(LINK_THIS, 90055, (string)SCRIPT_CHANNEL, llDumpList2String([llList2String(MENU_LIST, ANIM_INDEX), llList2String(DATA_LIST, ANIM_INDEX), llList2String(POS_ROT_LIST, ANIM_INDEX * 2), llList2String(POS_ROT_LIST, ANIM_INDEX * 2 + 1), broadcast, speed_index], "|"));
+    // Current selection
+    string pose_menu_name = llList2String(MENU_LIST, ANIM_INDEX);  // e.g. "P:Skipper" or "Doggy 1"
+    string data_seq_full  = llList2String(DATA_LIST, ANIM_INDEX);  // notecard sequence as fallback
+
+    // Determine kind and clean name (no ?: operator)
+    string kind;
+    string name;
+
+    if (llGetSubString(pose_menu_name, 0, 1) == "P:")
+    {
+        kind = "P";
+        name = llGetSubString(pose_menu_name, 2, -1);
+    }
+    else
+    {
+        kind = "Y";
+        name = pose_menu_name;
+    }
+
+    // LSD keys
+    string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
+    string seq  = llLinksetDataRead(base + "seq");
+
+    if (seq == "")
+    {
+        seq = data_seq_full; // fallback to notecard sequence
+    }
+
+    // Position/Rotation from LSD (these always exist after notecard parse)
+    vector p = (vector)llLinksetDataRead(base + "p");
+    vector r = (vector)llLinksetDataRead(base + "r");
+
+    // Send to [AV]sitA
+    llMessageLinked(
+        LINK_THIS,
+        90055,
+        (string)SCRIPT_CHANNEL,
+        llDumpList2String([pose_menu_name, seq, (string)p, (string)r, broadcast, speed_index], "|")
+    );
 }
+
+
 
 memory()
 {
     llOwnerSay(llGetScriptName() + "[" + version + "] " + (string)llGetListLength(MENU_LIST) + " Items Ready, Mem=" + (string)(65536 - llGetUsedMemory()));
 }
 
-integer has_speed_variant(string base_name)
-{
-    string trimmed_base = llStringTrim(base_name, STRING_TRIM_TAIL);
-    integer anim_count = llGetInventoryNumber(INVENTORY_ANIMATION);
-    integer i;
-    for (i = 0; i < anim_count; ++i)
-    {
-        string candidate = llGetInventoryName(INVENTORY_ANIMATION, i);
-        integer candidate_length = llStringLength(candidate);
-        if (candidate_length)
-        {
-            string suffix = llGetSubString(candidate, candidate_length - 1, candidate_length - 1);
-            if (suffix == "+" || suffix == "-")
-            {
-                string candidate_base = "";
-                if (candidate_length > 1)
-                {
-                    candidate_base = llGetSubString(candidate, 0, candidate_length - 2);
-                }
-                candidate_base = llStringTrim(candidate_base, STRING_TRIM_TAIL);
-                if (candidate_base == trimmed_base)
-                {
-                    return TRUE;
-                }
-            }
-        }
-    }
-    return FALSE;
-}
-
 integer animation_menu(integer animation_menu_function)
 {
-    integer select_available = llGetInventoryType(select_script) == INVENTORY_SCRIPT;
-    if ((animation_menu_function == -1 || llGetListLength(MENU_LIST) < 2) && (!helper_mode) && select_available)
+    if ((animation_menu_function == -1 || llGetListLength(MENU_LIST) < 2) && (!helper_mode) && llGetInventoryType(select_script) == INVENTORY_SCRIPT)
     {
         llMessageLinked(LINK_SET, 90009, CONTROLLER, MY_SITTER);
     }
@@ -127,22 +153,34 @@ integer animation_menu(integer animation_menu_function)
         {
             menu += CUSTOM_TEXT + "\n";
         }
-        if (SITTER_LABEL != "")
+        if (SITTER_INFO != "")
         {
-            menu += "[" + SITTER_LABEL + "]";
+            menu += "[" + llList2String(llParseStringKeepNulls(SITTER_INFO, [SEP], []), 0);
+            menu += "]";
         }
         else if (number_of_sitters > 1)
         {
             menu += "[Sitter " + (string)SCRIPT_CHANNEL + "]";
         }
-        list data_entry = llParseStringKeepNulls(llList2String(DATA_LIST, ANIM_INDEX), [SEP], []);
-        string animation_file = llList2String(data_entry, 0);
+        // NEW (read from LSD)
+        string pose_menu_name = llList2String(MENU_LIST, ANIM_INDEX);
+        string kind; string name;
+        if (llGetSubString(pose_menu_name, 0, 1) == "P:") { kind = "P"; name = llGetSubString(pose_menu_name, 2, -1); }
+        else { kind = "Y"; name = pose_menu_name; }
+        
+        string seq = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":seq");
+        string animation_file = "";
+        if (seq != "")
+        {
+            list parts = llParseStringKeepNulls(seq, [SEP], []);
+            if (llGetListLength(parts) > 0) animation_file = llList2String(parts, 0);
+        }
         string CURRENT_POSE_NAME;
         if (FIRST_INDEX != -1)
         {
             CURRENT_POSE_NAME = llList2String(MENU_LIST, ANIM_INDEX);
             menu += " [" + llList2String(llParseString2List(CURRENT_POSE_NAME, ["P:"], []), 0);
-            if (has_speed_variant(animation_file))
+            if (llGetInventoryType(animation_file + "+") == INVENTORY_ANIMATION)
             {
                 if (speed_index < 0)
                 {
@@ -156,16 +194,15 @@ integer animation_menu(integer animation_menu_function)
             menu += "]";
         }
         integer total_items;
-        integer menu_length = llGetListLength(MENU_LIST);
         integer i = current_menu + 1;
-        while (i < menu_length && llSubStringIndex(llList2String(MENU_LIST, i), "M:"))
+        while (i < llGetListLength(MENU_LIST) && llSubStringIndex(llList2String(MENU_LIST, i), "M:"))
         {
             ++total_items;
             ++i;
         }
         list menu_items0;
         list menu_items2;
-        if (current_menu != -1 || select_available)
+        if (current_menu != -1 || llGetInventoryType(select_script) == INVENTORY_SCRIPT)
         {
             menu_items0 += "[BACK]";
         }
@@ -193,7 +230,7 @@ integer animation_menu(integer animation_menu_function)
                 menu_items2 += "[ADJUST]";
             }
         }
-        if (llSubStringIndex(onSit, "ASK") && ((current_menu == -1 && SWAP == 1) || SWAP == 2 || llSubStringIndex(submenu_info, "S") != -1) && (number_of_sitters > 1 && !select_available))
+        if (llSubStringIndex(onSit, "ASK") && ((current_menu == -1 && SWAP == 1) || SWAP == 2 || llSubStringIndex(submenu_info, "S") != -1) && (number_of_sitters > 1 && llGetInventoryType(select_script) != INVENTORY_SCRIPT))
         {
             menu_items2 += "[SWAP]";
         }
@@ -215,12 +252,10 @@ integer animation_menu(integer animation_menu_function)
             items_per_page -= 2;
         }
         list menu_items1;
-        integer page_start = current_menu + 1 + menu_page * items_per_page;
-        integer page_end = page_start + items_per_page;
-        i = page_start;
+        integer page_start = (i = current_menu + 1 + menu_page * items_per_page);
         do
         {
-            if (i < menu_length)
+            if (i < llGetListLength(MENU_LIST))
             {
                 string m = llList2String(MENU_LIST, i);
                 if (!llSubStringIndex(m, "M:"))
@@ -237,7 +272,7 @@ integer animation_menu(integer animation_menu_function)
                 }
             }
         }
-        while (++i < page_end);
+        while (++i < page_start + items_per_page);
         @end;
         if (animation_menu_function == 1)
         {
@@ -245,8 +280,7 @@ integer animation_menu(integer animation_menu_function)
         }
         if (submenu_info == "V")
         {
-            integer filler = items_per_page - llGetListLength(menu_items1);
-            while (filler-- > 0)
+            while (llGetListLength(menu_items1) < items_per_page)
             {
                 menu_items1 += " ";
             }
@@ -254,7 +288,10 @@ integer animation_menu(integer animation_menu_function)
         llListenRemove(menu_handle);
         menu_handle = llListen(menu_channel, "", CONTROLLER, "");
         menu_items0 = menu_items0 + menu_items1 + menu_items2;
-        menu_items1 = order_buttons(menu_items0);
+        menu_items1 = llList2List(menu_items0, -3, -1);
+        menu_items1 += llList2List(menu_items0, -6 ,-4);
+        menu_items1 += llList2List(menu_items0, -9 ,-7);
+        menu_items1 += llList2List(menu_items0, -12 ,-10);
         llDialog(CONTROLLER, menu, menu_items1, menu_channel);
     }
     return 0;
@@ -558,7 +595,11 @@ default
             }
             if (num == 90299)
             {
-                MENU_LIST = DATA_LIST = POS_ROT_LIST = [];
+                MENU_LIST =  [];
+                DATA_LIST = [];
+                // Optional, keeps state tidy during a full rebuild:
+                FIRST_INDEX = -1;
+                ANIM_INDEX  = -1;
                 return;
             }
             if (num == 90070)
@@ -593,67 +634,67 @@ default
                 }
                 MENU_LIST = llListInsertList(MENU_LIST, [llList2String(data, 0)], place_to_add);
                 DATA_LIST = llListInsertList(DATA_LIST, [llList2String(data, 1)], place_to_add);
-                POS_ROT_LIST = llListInsertList(POS_ROT_LIST, [0, 0], place_to_add * 2);
                 if (llGetListLength(data) == 4)
                 {
-                    if (FIRST_INDEX == -1)
-                    {
-                        FIRST_INDEX = place_to_add;
-                    }
-                    if (index != -1)
-                    {
-                        place_to_add = index;
-                    }
-                    POS_ROT_LIST = llListReplaceList(POS_ROT_LIST, [(vector)llList2String(data, 2), (vector)llList2String(data, 3)], place_to_add * 2, place_to_add * 2 + 1);
+                    string menu_name = llList2String(MENU_LIST, place_to_add);
+                    string kind; string name;
+                    if (llGetSubString(menu_name, 0, 1) == "P:") { kind = "P"; name = llGetSubString(menu_name, 2, -1); }
+                    else { kind = "Y"; name = menu_name; }
+                
+                    string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
+                    // data[1] is seq (already written by [AV]sitA helper), data[2]=pos, data[3]=rot
+                    llLinksetDataWrite(base + "p", llList2String(data, 2));
+                    llLinksetDataWrite(base + "r", llList2String(data, 3));
+                
+                    // Trim memory: pose rows don’t need DATA_LIST anymore
+                    DATA_LIST = llListReplaceList(DATA_LIST, [""], place_to_add, place_to_add);
+                
                     ANIM_INDEX = place_to_add;
                     send_anim_info(TRUE);
                     memory();
+                    return;
                 }
+
                 return;
             }
-            if (num == 90301)
+           if (num == 90301)
             {
                 if (index != -1)
                 {
-                    one = llGetListLength(data);
-                    data = [(vector)llList2String(data, 1), (vector)llList2String(data, 2)];
-
-                    // LSL::
-                    // Reuse the preexisting vectors when possible, to save memory
-                    if ((two = llListFindList(POS_ROT_LIST, llList2List(data, 0, 0))) != -1)
-                        data = llList2List(POS_ROT_LIST, two, two) + llList2List(data, 1, 1);
-                    if ((two = llListFindList(POS_ROT_LIST, llList2List(data, 1, 1))) != -1)
-                        data = llList2List(data, 0, 0) + llList2List(POS_ROT_LIST, two, two);
-                    // ::LSL
-
-                    POS_ROT_LIST = llListReplaceList(POS_ROT_LIST, data, index * 2, index * 2 + 1);
-                    if (one != 3)
+                    // id payload format from [AV]sitA: "<pose>|<pos>|<rot>"
+                    string menu_name = llList2String(MENU_LIST, index);
+            
+                    string kind; string name;
+                    if (llGetSubString(menu_name, 0, 1) == "P:")
+                    {
+                        kind = "P";
+                        name = llGetSubString(menu_name, 2, -1);
+                    }
+                    else
+                    {
+                        kind = "Y";
+                        name = menu_name;
+                    }
+            
+                    string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
+            
+                    // data[1] = pos, data[2] = rot (strings)
+                    llLinksetDataWrite(base + "p", llList2String(data, 1));
+                    llLinksetDataWrite(base + "r", llList2String(data, 2));
+            
+                    // Maintain old behavior: if it wasn't a 3-field parse (rare), ping A to refresh live
+                    if (llGetListLength(data) != 3)
                     {
                         send_anim_info(FALSE);
                     }
                 }
                 return;
             }
+
             if (num == 90302)
             {
                 number_of_sitters = llList2Integer(data, 0);
                 SITTER_INFO = llList2String(data, 1);
-                if (SITTER_INFO != "")
-                {
-                    list sitter_parts = llParseStringKeepNulls(SITTER_INFO, [SEP], []);
-                    if (llGetListLength(sitter_parts))
-                    {
-                        SITTER_LABEL = llList2String(sitter_parts, 0);
-                    }
-                    else
-                    {
-                        SITTER_LABEL = "";
-                    }
-                }
-                else
-                {
-                    SITTER_LABEL = "";
-                }
                 SET = llList2Integer(data, 2);
                 MTYPE = llList2Integer(data, 3);
                 ETYPE = llList2Integer(data, 4);
@@ -681,8 +722,7 @@ default
                                , (string)SCRIPT_CHANNEL
                                );
                 integer i = -1;
-                integer menu_length = llGetListLength(MENU_LIST);
-                while (++i < menu_length)
+                while (++i < llGetListLength(MENU_LIST))
                 {
                     llSleep(0.5);
                     llMessageLinked(LINK_THIS, 90022
@@ -692,17 +732,36 @@ default
                                    );
                 }
                 i = -1;
-                while (++i < menu_length)
+               while (++i < llGetListLength(MENU_LIST))
                 {
-                    if (llList2Vector(POS_ROT_LIST, i * 2) != ZERO_VECTOR)
+                    string menu_name = llList2String(MENU_LIST, i);
+                
+                    string kind; string name;
+                    if (llGetSubString(menu_name, 0, 1) == "P:")
+                    {
+                        kind = "P";
+                        name = llGetSubString(menu_name, 2, -1);
+                    }
+                    else
+                    {
+                        kind = "Y";
+                        name = menu_name;
+                    }
+                
+                    string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
+                    string ps = llLinksetDataRead(base + "p");
+                    string rs = llLinksetDataRead(base + "r");
+                
+                    // Only dump if we have something meaningful
+                    if (ps != "" && (vector)ps != ZERO_VECTOR)
                     {
                         llSleep(0.2);
-                        llMessageLinked(LINK_THIS, 90022
-                                       , "{" + llList2String(MENU_LIST, i) + "}"
-                                             + llList2String(POS_ROT_LIST, i * 2)
-                                             + llList2String(POS_ROT_LIST, i * 2 + 1)
-                                       , (string)SCRIPT_CHANNEL
-                                       );
+                        llMessageLinked(
+                            LINK_THIS,
+                            90022,
+                            "{" + menu_name + "}" + ps + rs,
+                            (string)SCRIPT_CHANNEL
+                        );
                     }
                 }
                 llMessageLinked(LINK_THIS, 90021, (string)SCRIPT_CHANNEL, "");
@@ -750,3 +809,4 @@ default
         }
     }
 }
+/* --------------- end [AV]sitB --------------- */
