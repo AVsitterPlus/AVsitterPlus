@@ -649,52 +649,36 @@ default
                 // After insert, trim memory by moving MENU flags to LSD and keeping DATA_LIST
                 // only for buttons. Identify entry type by prefix.
                 string entry = llList2String(MENU_LIST, place_to_add);
-                string head = llGetSubString(entry, 0, 0); // "M" / "P" / "T" / "B" or first char of Y pose
-                if (head == "M") {
+               
+                string head2 = llGetSubString(entry, 0, 1);
+                if (head2 == "M:") {
                     string mname = llGetSubString(entry, 2, -1);
                     string flags = llList2String(data, 1);
                     llLinksetDataWrite("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags", flags);
                 }
-                else if (head == "B") { // "B:<label>"
+                else if (head2 == "B:") { // Button row
                     string blabel = llGetSubString(entry, 2, -1);
-                    string bkey = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":B:" + blabel;
+                    string bkey   = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":B:" + blabel;
                     llLinksetDataWrite(bkey, llList2String(data, 1)); // legacy "n|msg|id"
                 }
-                else if (head == "T") {
-                    // no payload for titles
+                else if (head2 == "T:") {
+                    // title: no payload
                 }
                 else {
                     // Pose row: either "P:<name>" or a plain Y pose
-                    string kind;
-                    string name;
-                
-                    if (llGetSubString(entry, 0, 1) == "P:") {
-                        kind = "P";
-                        name = llGetSubString(entry, 2, -1);
-                    } else {
-                        kind = "Y";
-                        name = entry; // whole entry is the pose name
-                    }
+                    string kind; string name;
+                    if (llGetSubString(entry, 0, 1) == "P:") { kind = "P"; name = llGetSubString(entry, 2, -1); }
+                    else { kind = "Y"; name = entry; }
                 
                     string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
-                
-                    // always store sequence
                     llLinksetDataWrite(base + "seq", llList2String(data, 1));
-                
-                    // if provided, also store pos/rot
                     if (llGetListLength(data) >= 4) {
                         llLinksetDataWrite(base + "p", llList2String(data, 2));
                         llLinksetDataWrite(base + "r", llList2String(data, 3));
                     }
-                
-                    // optional: autoselect newly added pose
-                    ANIM_INDEX = place_to_add;
-                    send_anim_info(TRUE);
                     memory();
                     return;
                 }
-
-                // "T" rows have no payload to persist
                 
                 return;
             }
@@ -767,29 +751,29 @@ default
                 {
                     llSleep(0.5);
                     string mi = llList2String(MENU_LIST, i);
+                    string pref2 = llGetSubString(mi, 0, 1);
+
                     string payload = "";
-                    // detect kind from prefix
-                    if (llGetSubString(mi, 0, 1) == "M:") {
+                    if (pref2 == "M:") {
                         string mname = llGetSubString(mi, 2, -1);
                         payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags");
                     }
-                    else if (llGetSubString(mi, 0, 1) == "P:") {
+                    else if (pref2 == "P:") {
                         string name = llGetSubString(mi, 2, -1);
                         payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":P:" + name + ":seq");
                     }
-                    else if (llGetSubString(mi, 0, 1) == "B:") {
+                    else if (pref2 == "B:") {
                         string blabel = llGetSubString(mi, 2, -1);
                         payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":B:" + blabel);
                     }
-                    else if (llGetSubString(mi, 0, 1) == "T:") {
-                        // titles: no payload
+                    else if (pref2 == "T:") {
+                        // titles have no payload
                     }
                     else {
-                        // Y pose (no prefix)
+                        // Y pose
                         string name = mi;
                         payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":Y:" + name + ":seq");
                     }
-                    
                     llMessageLinked(LINK_THIS, 90022, "S:" + mi + "|" + payload, (string)SCRIPT_CHANNEL);
 
 
