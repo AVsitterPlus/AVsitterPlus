@@ -50,6 +50,7 @@ integer speed_index;
 integer verbose = 0;
 string SEP = "�"; // OSS::string SEP = "\x7F";
 
+float AVS_CROSS_GUARD = 2.0;
 
 
 string avp_pose_kind_from_menu(string menuname) {
@@ -63,6 +64,25 @@ string avp_clean_pose_name(string menuname) {
     return menuname;
 }
 
+update_state(string poseMenu, string kind, string name, string seq, vector p, vector r)
+{
+    string base = "AVS2:STATE:S" + (string)SCRIPT_CHANNEL + ":";
+    llLinksetDataWrite(base + "pose",  poseMenu);
+    llLinksetDataWrite(base + "kind",  kind);
+    llLinksetDataWrite(base + "name",  name);
+    llLinksetDataWrite(base + "seq",   seq);
+    llLinksetDataWrite(base + "p",     (string)p);
+    llLinksetDataWrite(base + "r",     (string)r);
+    llLinksetDataWrite(base + "speed", (string)speed_index);
+    llLinksetDataWrite(base + "sitter",(string)MY_SITTER);
+}
+
+update_sitter_only(key sitter)
+{
+    string base = "AVS2:STATE:S" + (string)SCRIPT_CHANNEL + ":";
+    llLinksetDataWrite(base + "sitter", (string)sitter);
+}
+
 
 Out(integer level, string out)
 {
@@ -74,54 +94,34 @@ Out(integer level, string out)
 
 send_anim_info(integer broadcast)
 {
-    // Current selection
-    string pose_menu_name = llList2String(MENU_LIST, ANIM_INDEX);  // e.g. "P:Skipper" or "Doggy 1"
+    if (ANIM_INDEX < 0 || ANIM_INDEX >= llGetListLength(MENU_LIST)) return;
+    string pose_menu_name = llList2String(MENU_LIST, ANIM_INDEX);
 
-    // Determine kind and clean name (no ?: operator)
-    string kind;
-    string name;
+    string kind; string name;
+    if (llGetSubString(pose_menu_name, 0, 1) == "P:") { kind = "P"; name = llGetSubString(pose_menu_name, 2, -1); }
+    else { kind = "Y"; name = pose_menu_name; }
 
-    if (llGetSubString(pose_menu_name, 0, 1) == "P:")
-    {
-        kind = "P";
-        name = llGetSubString(pose_menu_name, 2, -1);
-    }
-    else
-    {
-        kind = "Y";
-        name = pose_menu_name;
-    }
-
-    // LSD keys
-    string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
-    string seq  = llLinksetDataRead(base + "seq");
+    string baseAVPOS = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
+    string seq  = llLinksetDataRead(baseAVPOS + "seq");
     if (seq == "")
-        {
-            string fallbackAnim = avp_clean_pose_name(pose_menu_name);
-            // Only fallback if there’s an actual animation with that name
-            if (llGetInventoryType(fallbackAnim) == INVENTORY_ANIMATION)
-            {
-                seq = fallbackAnim; // AVsitter treats a bare token as the anim filename
-            }
-            else
-            {
-                // No safe fallback—skip sending to avoid starting a blank anim
-                return;
-            }
-        }
-   
-    // Position/Rotation from LSD (these always exist after notecard parse)
-    vector p = (vector)llLinksetDataRead(base + "p");
-    vector r = (vector)llLinksetDataRead(base + "r");
+    {
+        string fallbackAnim = name;
+        if (llGetInventoryType(fallbackAnim) == INVENTORY_ANIMATION) seq = fallbackAnim;
+        else return;
+    }
 
-    // Send to [AV]sitA
-    llMessageLinked(
-        LINK_THIS,
-        90055,
-        (string)SCRIPT_CHANNEL,
-        llDumpList2String([pose_menu_name, seq, (string)p, (string)r, broadcast, speed_index], "|")
-    );
+    vector p = (vector)llLinksetDataRead(baseAVPOS + "p");
+    vector r = (vector)llLinksetDataRead(baseAVPOS + "r");
+
+    // --- NEW: publish current pose state (single source of truth)
+    update_state(pose_menu_name, kind, name, seq, p, r);
+    // llLinksetDataWrite(baseSTATE + "active", "1"); // optional flag if you want it
+
+    // Existing handoff to A
+    llMessageLinked(LINK_THIS, 90055, (string)SCRIPT_CHANNEL,
+        llDumpList2String([pose_menu_name, seq, (string)p, (string)r, broadcast, speed_index], "|"));
 }
+
 
 
 
@@ -444,8 +444,19 @@ default
 
     changed(integer change)
     {
+        // ➊ Start local stopwatch on region hand-off
+        if (change & CHANGED_REGION)
+        {
+            llResetTime();
+        }
+
         if (change & CHANGED_LINK)
         {
+            // ➋ Ignore early link churn after crossing
+            if (llGetTime() < AVS_CROSS_GUARD)
+            {
+                return;
+            }
             if (llGetAgentSize(llGetLinkKey(llGetNumberOfPrims())) == ZERO_VECTOR)
             {
                 speed_index = 0;
@@ -455,6 +466,8 @@ default
                 }
                 MY_SITTER = "";
                 ANIM_INDEX = FIRST_INDEX;
+                update_sitter_only("");
+               
             }
             else
             {
@@ -617,6 +630,7 @@ default
             if (num == 90070)
             {
                 CONTROLLER = MY_SITTER = id;
+                update_sitter_only(MY_SITTER);
                 menu_page = 0;
                 current_menu = -1;
                 menu_channel = ((integer)llFrand(0x7FFFFF80) + 1) * -1; // 7FFFFF80 = max float < 2^31
