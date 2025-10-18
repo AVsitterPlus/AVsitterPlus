@@ -84,8 +84,9 @@ integer menu_handle;
 string BRAND;
 string onSit;
 integer speed_index;
-integer verbose = 0;
 string SEP = "�"; // OSS::string SEP = "\x7F";
+// Sim-crossing debounce window (seconds)
+float AVS_CROSS_GUARD = 5.0;
 
 /* --- LSD read helpers (tiny & safe) --- */
 string AVP_LSD_PFX = "AVS2:AVPOS:";
@@ -110,14 +111,6 @@ string avp_clean_pose_name(string posename) {
     return posename;
 }
 
-
-Out(integer level, string out)
-{
-    if (verbose >= level)
-    {
-        llOwnerSay(llGetScriptName() + "[" + version + "] " + out);
-    }
-}
 
 list order_buttons(list buttons)
 {
@@ -912,26 +905,54 @@ default
         }
     }
 
-    changed(integer change)
+   changed(integer change)
+   {
+    integer i;
+    // ➊ Start local stopwatch on region hand-off
+    if (change & CHANGED_REGION)
     {
-        integer i;
-        if (change & CHANGED_LINK)
+        llResetTime();
+    }
+    if (change & CHANGED_LINK)
+    {
+        // Debounce sim crossing/link churn
+        if (llGetTime() < AVS_CROSS_GUARD)
         {
-            SWAPPED = FALSE;
-            integer stood;
-            if (SET == -1 && llGetListLength(SITTERS) > 1)
+            return;
+        }
+        SWAPPED = FALSE;
+        integer stood;
+
+        // --- MULTI-SITTER RECONCILIATION (no AVPRIMS, bitmask instead) ---
+        if (SET == -1 && llGetListLength(SITTERS) > 1)
+        {
+            integer seatcount = llGetListLength(SITTERS);
+            integer seen_mask = 0; // bit j => registered sitter j was seen in this scan
+
+            // Scan all links once and react
+            integer L = llGetNumberOfPrims();
+            for (i = L; i > 0; --i)
             {
-                list AVPRIMS;
-                i = llGetNumberOfPrims();
-                while (llGetAgentSize(llGetLinkKey(i)) != ZERO_VECTOR)
+                key lk = llGetLinkKey(i);
+                if (llGetAgentSize(lk) != ZERO_VECTOR)
                 {
-                    if (llListFindList(SITTERS, [llGetLinkKey(i)]) == -1)
+                    // Is this link's agent already a registered sitter?
+                    integer idx = llListFindList(SITTERS, [lk]);
+                    if (idx != -1)
                     {
-                        integer sitterGender = llList2Integer(llGetObjectDetails(llGetLinkKey(i), [OBJECT_BODY_SHAPE_TYPE]), 0);
+                        // Mark this registered sitter as present
+                        integer bit = 1;
+                        bit = bit << idx;          // shift left by idx
+                        seen_mask = seen_mask | bit;
+                    }
+                    else
+                    {
+                        // New sitter seen on some link — find a slot for them (original gender logic)
+                        integer sitterGender = llList2Integer(llGetObjectDetails(lk, [OBJECT_BODY_SHAPE_TYPE]), 0);
                         integer first_available = llListFindList(SITTERS, [""]);
                         integer first_unassigned = -1;
                         integer j;
-                        while (j < llGetListLength(SITTERS))
+                        while (j < seatcount)
                         {
                             if (llList2String(SITTERS, j) == "")
                             {
@@ -952,177 +973,159 @@ default
                             first_available = first_unassigned;
                         }
                         @foundavailable;
+
                         if (first_available == SCRIPT_CHANNEL)
                         {
-                            if (sitterGender)
-                            {
-                                if (MALE_POSENAME != "")
-                                {
-                                    if (CURRENT_POSE_NAME == FIRST_POSENAME)
-                                    {
-                                        CURRENT_POSE_NAME = MALE_POSENAME;
-                                        CURRENT_ANIMATION_SEQUENCE = FIRST_MALE_ANIMATION_SEQUENCE;
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                if (FEMALE_POSENAME != "")
-                                {
-                                    if (CURRENT_POSE_NAME == FIRST_POSENAME)
-                                    {
-                                        CURRENT_POSE_NAME = FEMALE_POSENAME;
-                                        CURRENT_ANIMATION_SEQUENCE = FIRST_FEMALE_ANIMATION_SEQUENCE;
-                                    }
-                                }
-                            }
-                            llRequestPermissions(llGetLinkKey(i), PERMISSION_TRIGGER_ANIMATION);
-                            llMessageLinked(LINK_SET, 90060, (string)SCRIPT_CHANNEL, llGetLinkKey(i)); // 90060=new sitter
+                            // This script's seat: request perms and notify
+                            llRequestPermissions(lk, PERMISSION_TRIGGER_ANIMATION);
+                            llMessageLinked(LINK_SET, 90060, (string)SCRIPT_CHANNEL, lk); // 90060=new sitter
                         }
                         else
                         {
-                            llMessageLinked(LINK_THIS, 90056, (string)SCRIPT_CHANNEL, llDumpList2String([CURRENT_POSE_NAME, CURRENT_ANIMATION_SEQUENCE, CURRENT_POSITION, CURRENT_ROTATION], "|")); // 90056=send anim info
+                            // Another seat: let its AVsitA instance update from our current pose
+                            llMessageLinked(
+                                LINK_THIS,
+                                90056,
+                                (string)SCRIPT_CHANNEL,
+                                llDumpList2String([CURRENT_POSE_NAME, CURRENT_ANIMATION_SEQUENCE, CURRENT_POSITION, CURRENT_ROTATION], "|")
+                            ); // 90056=send anim info
                         }
                     }
-                    AVPRIMS += llGetLinkKey(i);
-                    i--;
                 }
-                for (i = 0; i < llGetListLength(SITTERS); i++)
+            }
+
+            // Release any registered sitter that wasn't seen in this scan
+            integer k = 0;
+            while (k < seatcount)
+            {
+                integer bit2 = 1;
+                bit2 = bit2 << k;  // recompute per k
+                if (llList2String(SITTERS, k) != "" && ((seen_mask & bit2) == 0))
                 {
-                    if (llList2String(SITTERS, i) != "" && llListFindList(AVPRIMS, [llList2Key(SITTERS, i)]) == -1)
+                    llSetTimerEvent(0);
+                    stood = TRUE;
+                    release_sitter(k);
+                }
+                k++;
+            }
+        }
+        // --- END MULTI-SITTER RECONCILIATION ---
+
+        else
+        {
+            // Original single-sitter / fixed-seat path (unchanged)
+            for (i = 0; i < llGetListLength(SITTERS); i++)
+            {
+                string existing_sitter = llList2String(SITTERS, i);
+                key actual_sitter = llAvatarOnLinkSitTarget(llList2Integer(SITTERS_SITTARGETS, i));
+                if (llGetListLength(SITTERS) == 1)
+                {
+                    actual_sitter = llAvatarOnSitTarget();
+                }
+                if (existing_sitter != "")
+                {
+                    if (actual_sitter == NULL_KEY)
                     {
                         llSetTimerEvent(0);
                         stood = TRUE;
-                        SITTERS = llListReplaceList(SITTERS, [""], i, i);
-                        if (i == SCRIPT_CHANNEL)
-                        {
-                            if (llGetPermissions() & PERMISSION_TRIGGER_ANIMATION)
-                            {
-                                if (MY_SITTER) // OSS::if (osIsUUID(MY_SITTER) && MY_SITTER != NULL_KEY)
-                                {
-                                    llMessageLinked(LINK_SET, 90065, (string)SCRIPT_CHANNEL, MY_SITTER); // 90065=sitter gone
-                                }
-                                if (llGetAgentSize(MY_SITTER) != ZERO_VECTOR && (integer)CURRENT_ANIMATION_FILENAME)
-                                {
-                                    llStopAnimation(CURRENT_ANIMATION_FILENAME);
-                                }
-                                MY_SITTER = "";
-                                llListenRemove(menu_handle);
-                            }
-                        }
+                        release_sitter(i);
                     }
                 }
-            }
-            else
-            {
-                for (i = 0; i < llGetListLength(SITTERS); i++)
+                else if (actual_sitter) // OSS::else if (osIsUUID(actual_sitter) && actual_sitter != NULL_KEY)
                 {
-                    string existing_sitter = llList2String(SITTERS, i);
-                    key actual_sitter = llAvatarOnLinkSitTarget(llList2Integer(SITTERS_SITTARGETS, i));
-                    if (llGetListLength(SITTERS) == 1)
+                    if (i == SCRIPT_CHANNEL)
                     {
-                        actual_sitter = llAvatarOnSitTarget();
-                    }
-                    if (existing_sitter != "")
-                    {
-                        if (actual_sitter == NULL_KEY)
+                        if (llList2Integer(llGetObjectDetails(actual_sitter, [OBJECT_BODY_SHAPE_TYPE]), 0))
                         {
-                            llSetTimerEvent(0);
-                            stood = TRUE;
-                            release_sitter(i);
-                        }
-                    }
-                    else if (actual_sitter) // OSS::else if (osIsUUID(actual_sitter) && actual_sitter != NULL_KEY)
-                    {
-                        if (i == SCRIPT_CHANNEL)
-                        {
-                            if (llList2Integer(llGetObjectDetails(actual_sitter, [OBJECT_BODY_SHAPE_TYPE]), 0))
+                            if (MALE_POSENAME != "")
                             {
-                                if (MALE_POSENAME != "")
+                                if (CURRENT_POSE_NAME == FIRST_POSENAME)
                                 {
-                                    if (CURRENT_POSE_NAME == FIRST_POSENAME)
-                                    {
-                                        CURRENT_POSE_NAME = MALE_POSENAME;
-                                        CURRENT_ANIMATION_SEQUENCE = FIRST_MALE_ANIMATION_SEQUENCE;
-                                    }
+                                    CURRENT_POSE_NAME = MALE_POSENAME;
+                                    CURRENT_ANIMATION_SEQUENCE = FIRST_MALE_ANIMATION_SEQUENCE;
                                 }
                             }
-                            else
-                            {
-                                if (FEMALE_POSENAME != "")
-                                {
-                                    if (CURRENT_POSE_NAME == FIRST_POSENAME)
-                                    {
-                                        CURRENT_POSE_NAME = FEMALE_POSENAME;
-                                        CURRENT_ANIMATION_SEQUENCE = FIRST_FEMALE_ANIMATION_SEQUENCE;
-                                    }
-                                }
-                            }
-                            llRequestPermissions(actual_sitter, PERMISSION_TRIGGER_ANIMATION);
-                            llMessageLinked(LINK_SET, 90060, (string)SCRIPT_CHANNEL, actual_sitter); // 90060=new sitter
                         }
                         else
                         {
-                            llMessageLinked(LINK_THIS, 90056, (string)SCRIPT_CHANNEL, llDumpList2String([CURRENT_POSE_NAME, CURRENT_ANIMATION_SEQUENCE, CURRENT_POSITION, CURRENT_ROTATION], "|")); // 90056=send anim info
+                            if (FEMALE_POSENAME != "")
+                            {
+                                if (CURRENT_POSE_NAME == FIRST_POSENAME)
+                                {
+                                    CURRENT_POSE_NAME = FEMALE_POSENAME;
+                                    CURRENT_ANIMATION_SEQUENCE = FIRST_FEMALE_ANIMATION_SEQUENCE;
+                                }
+                            }
                         }
+                        llRequestPermissions(actual_sitter, PERMISSION_TRIGGER_ANIMATION);
+                        llMessageLinked(LINK_SET, 90060, (string)SCRIPT_CHANNEL, actual_sitter); // 90060=new sitter
                     }
-                }
-            }
-            if (stood && (string)SITTERS == "")
-            {
-                if (DFLT || llSubStringIndex(CURRENT_POSE_NAME, "P:") == -1)
-                {
-                    DEFAULT_POSITION = FIRST_POSITION;
-                    DEFAULT_ROTATION = FIRST_ROTATION;
-                    CURRENT_POSE_NAME = FIRST_POSENAME;
-                    CURRENT_ANIMATION_SEQUENCE = FIRST_ANIMATION_SEQUENCE;
-                    my_sittarget = original_my_sittarget;
-                    SITTERS_SITTARGETS = ORIGINAL_SITTERS_SITTARGETS;
-                    set_sittarget();
-                }
-                // inline prep() here
-                has_security = has_texture = FALSE;
-                if (!SCRIPT_CHANNEL)
-                {
-                    llMessageLinked(LINK_SET, 90201, "", ""); // 90201=Ask for info about plugins
-                }
-            }
-            if (prims != llGetObjectPrimCount(llGetKey()))
-            {
-                if (!SCRIPT_CHANNEL)
-                {
-                    // wipe_sit_targets() inlined here:
-                    for (i = 0; i <= llGetNumberOfPrims(); i++)
+                    else
                     {
-                        string desc = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
-                        if (desc != "-1" && "#-1" != llGetSubString(desc, -3, -1))
-                        {
-                            llLinkSitTarget(i, ZERO_VECTOR, ZERO_ROTATION);
-                        }
+                        llMessageLinked(LINK_THIS, 90056, (string)SCRIPT_CHANNEL, llDumpList2String([CURRENT_POSE_NAME, CURRENT_ANIMATION_SEQUENCE, CURRENT_POSITION, CURRENT_ROTATION], "|")); // 90056=send anim info
                     }
-
-                    llMessageLinked(LINK_SET, 90150, "", ""); // 90150=ask other AVsitA scripts to place their sittargets again
-                }
-                // inline prep() here
-                has_security = has_texture = FALSE;
-                if (!SCRIPT_CHANNEL)
-                {
-                    llMessageLinked(LINK_SET, 90201, "", ""); // 90201=Ask for info about plugins
                 }
             }
         }
-        if (change & CHANGED_INVENTORY)
+
+        // Post-reconciliation: original tidy/reset logic (unchanged)
+        if (stood && (string)SITTERS == "")
         {
-            // get_number_of_scripts() inlined here:
-            while (llGetInventoryType(main_script + " " + (string)(++i)) == INVENTORY_SCRIPT)
-                ;
-            if (llGetInventoryKey(notecard_name) != notecard_key || i != llGetListLength(SITTERS) || llGetInventoryType(memoryscript) != INVENTORY_SCRIPT)
+            if (DFLT || llSubStringIndex(CURRENT_POSE_NAME, "P:") == -1)
             {
-                end_sitter();
-                llResetScript();
+                DEFAULT_POSITION = FIRST_POSITION;
+                DEFAULT_ROTATION = FIRST_ROTATION;
+                CURRENT_POSE_NAME = FIRST_POSENAME;
+                CURRENT_ANIMATION_SEQUENCE = FIRST_ANIMATION_SEQUENCE;
+                my_sittarget = original_my_sittarget;
+                SITTERS_SITTARGETS = ORIGINAL_SITTERS_SITTARGETS;
+                set_sittarget();
+            }
+            // inline prep() here
+            has_security = has_texture = FALSE;
+            if (!SCRIPT_CHANNEL)
+            {
+                llMessageLinked(LINK_SET, 90201, "", ""); // 90201=Ask for info about plugins
+            }
+        }
+        if (prims != llGetObjectPrimCount(llGetKey()))
+        {
+            if (!SCRIPT_CHANNEL)
+            {
+                // wipe_sit_targets() inlined here:
+                for (i = 0; i <= llGetNumberOfPrims(); i++)
+                {
+                    string desc = (string)llGetLinkPrimitiveParams(i, [PRIM_DESC]);
+                    if (desc != "-1" && "#-1" != llGetSubString(desc, -3, -1))
+                    {
+                        llLinkSitTarget(i, ZERO_VECTOR, ZERO_ROTATION);
+                    }
+                }
+
+                llMessageLinked(LINK_SET, 90150, "", ""); // 90150=ask other AVsitA scripts to place their sittargets again
+            }
+            // inline prep() here
+            has_security = has_texture = FALSE;
+            if (!SCRIPT_CHANNEL)
+            {
+                llMessageLinked(LINK_SET, 90201, "", ""); // 90201=Ask for info about plugins
             }
         }
     }
+    if (change & CHANGED_INVENTORY)
+    {
+        // get_number_of_scripts() inlined here:
+        while (llGetInventoryType(main_script + " " + (string)(++i)) == INVENTORY_SCRIPT)
+            ;
+        if (llGetInventoryKey(notecard_name) != notecard_key || i != llGetListLength(SITTERS) || llGetInventoryType(memoryscript) != INVENTORY_SCRIPT)
+        {
+            end_sitter();
+            llResetScript();
+        }
+    }
+}
+
+
 
     run_time_permissions(integer perm)
     {
