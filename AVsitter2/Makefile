@@ -5,7 +5,7 @@
 PYTHON=python3
 
 # Full path to main.py in the optimizer. Depends on where it was unpacked.
-OPTIMIZER=/l/pyoptimizer/main.py
+OPTIMIZER=/opt/pyoptimizer/main.py
 
 # Which preprocessor to use. Use 'gcpp' for GNU cpp (typical on Linux/OSX);
 # use 'mcpp' for mcpp.
