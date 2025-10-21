@@ -1,3 +1,4 @@
+/* --------------- [AV]sitB (unchanged logic) --------------- */
 /*
  * [AV]sitB - Main Memory script - needs [AV]sitA to work
  *
@@ -15,7 +16,7 @@
  */
 
 string product = "AVsitter™";
-string #version = "2.2p04";
+string version = "2.2p04";
 string BRAND;
 integer OLD_HELPER_METHOD;
 string main_script = "[AV]sitA";
@@ -32,8 +33,6 @@ string CUSTOM_TEXT;
 string ADJUST_MENU;
 string SITTER_INFO;
 list MENU_LIST;
-list DATA_LIST;
-list POS_ROT_LIST = [CUSTOM_TEXT]; //OSS::list POS_ROT_LIST; // Force error in LSO
 integer helper_mode;
 integer has_RLV;
 integer ANIM_INDEX;
@@ -42,7 +41,6 @@ integer menu_handle;
 integer menu_channel;
 integer current_menu = -1;
 integer last_menu;
-string submenu_info;
 integer menu_page;
 key MY_SITTER;
 key CONTROLLER;
@@ -51,6 +49,40 @@ string onSit;
 integer speed_index;
 integer verbose = 0;
 string SEP = "�"; // OSS::string SEP = "\x7F";
+
+float AVS_CROSS_GUARD = 2.0;
+
+
+string avp_pose_kind_from_menu(string menuname) {
+    if (llGetSubString(menuname, 0, 1) == "P:")
+        return "P";
+    return "Y";
+}
+string avp_clean_pose_name(string menuname) {
+    if (llGetSubString(menuname, 0, 1) == "P:")
+        return llGetSubString(menuname, 2, -1);
+    return menuname;
+}
+
+update_state(string poseMenu, string kind, string name, string seq, vector p, vector r)
+{
+    string base = "AVS2:STATE:S" + (string)SCRIPT_CHANNEL + ":";
+    llLinksetDataWrite(base + "pose",  poseMenu);
+    llLinksetDataWrite(base + "kind",  kind);
+    llLinksetDataWrite(base + "name",  name);
+    llLinksetDataWrite(base + "seq",   seq);
+    llLinksetDataWrite(base + "p",     (string)p);
+    llLinksetDataWrite(base + "r",     (string)r);
+    llLinksetDataWrite(base + "speed", (string)speed_index);
+    llLinksetDataWrite(base + "sitter",(string)MY_SITTER);
+}
+
+update_sitter_only(key sitter)
+{
+    string base = "AVS2:STATE:S" + (string)SCRIPT_CHANNEL + ":";
+    llLinksetDataWrite(base + "sitter", (string)sitter);
+}
+
 
 Out(integer level, string out)
 {
@@ -62,8 +94,36 @@ Out(integer level, string out)
 
 send_anim_info(integer broadcast)
 {
-    llMessageLinked(LINK_THIS, 90055, (string)SCRIPT_CHANNEL, llDumpList2String([llList2String(MENU_LIST, ANIM_INDEX), llList2String(DATA_LIST, ANIM_INDEX), llList2String(POS_ROT_LIST, ANIM_INDEX * 2), llList2String(POS_ROT_LIST, ANIM_INDEX * 2 + 1), broadcast, speed_index], "|"));
+    if (ANIM_INDEX < 0 || ANIM_INDEX >= llGetListLength(MENU_LIST)) return;
+    string pose_menu_name = llList2String(MENU_LIST, ANIM_INDEX);
+
+    string kind; string name;
+    if (llGetSubString(pose_menu_name, 0, 1) == "P:") { kind = "P"; name = llGetSubString(pose_menu_name, 2, -1); }
+    else { kind = "Y"; name = pose_menu_name; }
+
+    string baseAVPOS = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
+    string seq  = llLinksetDataRead(baseAVPOS + "seq");
+    if (seq == "")
+    {
+        string fallbackAnim = name;
+        if (llGetInventoryType(fallbackAnim) == INVENTORY_ANIMATION) seq = fallbackAnim;
+        else return;
+    }
+
+    vector p = (vector)llLinksetDataRead(baseAVPOS + "p");
+    vector r = (vector)llLinksetDataRead(baseAVPOS + "r");
+
+    // --- NEW: publish current pose state (single source of truth)
+    update_state(pose_menu_name, kind, name, seq, p, r);
+    // llLinksetDataWrite(baseSTATE + "active", "1"); // optional flag if you want it
+
+    // Existing handoff to A
+    llMessageLinked(LINK_THIS, 90055, (string)SCRIPT_CHANNEL,
+        llDumpList2String([pose_menu_name, seq, (string)p, (string)r, broadcast, speed_index], "|"));
 }
+
+
+
 
 memory()
 {
@@ -99,7 +159,19 @@ integer animation_menu(integer animation_menu_function)
         {
             menu += "[Sitter " + (string)SCRIPT_CHANNEL + "]";
         }
-        string animation_file = llList2String(llParseStringKeepNulls(llList2String(DATA_LIST, ANIM_INDEX), [SEP], []), 0);
+        // NEW (read from LSD)
+        string pose_menu_name = llList2String(MENU_LIST, ANIM_INDEX);
+        string kind; string name;
+        if (llGetSubString(pose_menu_name, 0, 1) == "P:") { kind = "P"; name = llGetSubString(pose_menu_name, 2, -1); }
+        else { kind = "Y"; name = pose_menu_name; }
+        
+        string seq = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":seq");
+        string animation_file = "";
+        if (seq != "")
+        {
+            list parts = llParseStringKeepNulls(seq, [SEP], []);
+            if (llGetListLength(parts) > 0) animation_file = llList2String(parts, 0);
+        }
         string CURRENT_POSE_NAME;
         if (FIRST_INDEX != -1)
         {
@@ -131,11 +203,18 @@ integer animation_menu(integer animation_menu_function)
         {
             menu_items0 += "[BACK]";
         }
-        string submenu_info;
+       string submenu_info = "";
         if (current_menu != -1)
         {
-            submenu_info = llList2String(DATA_LIST, current_menu);
+            string m = llList2String(MENU_LIST, current_menu);        // "M:<name>"
+            if (llGetSubString(m, 0, 1) == "M:")
+            {
+                string mname = llGetSubString(m, 2, -1);
+                submenu_info = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags");
+                // ok if "", old builds without flags stay compatible
+            }
         }
+
         if (helper_mode)
         {
             menu_items2 += "[NEW]";
@@ -272,7 +351,16 @@ default
         if (index != -1)
         {
             index += current_menu + 1;
-            list button_data = llParseStringKeepNulls(llList2String(DATA_LIST, index), [SEP], []);
+            string entry = llList2String(MENU_LIST, index);
+            string blabel = llGetSubString(entry, 2, -1);
+            string bkey = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":B:" + blabel;
+            string bpayload = llLinksetDataRead(bkey);
+            // If the button has no stored payload, ignore the click safely.
+            if (bpayload == "")
+            {
+                return;
+            }
+            list button_data = llParseStringKeepNulls(bpayload, [SEP], []);
             if (llList2String(button_data, 1) != "")
             {
                 msg = llList2String(button_data, 1);
@@ -356,8 +444,19 @@ default
 
     changed(integer change)
     {
+        // ➊ Start local stopwatch on region hand-off
+        if (change & CHANGED_REGION)
+        {
+            llResetTime();
+        }
+
         if (change & CHANGED_LINK)
         {
+            // ➋ Ignore early link churn after crossing
+            if (llGetTime() < AVS_CROSS_GUARD)
+            {
+                return;
+            }
             if (llGetAgentSize(llGetLinkKey(llGetNumberOfPrims())) == ZERO_VECTOR)
             {
                 speed_index = 0;
@@ -367,6 +466,8 @@ default
                 }
                 MY_SITTER = "";
                 ANIM_INDEX = FIRST_INDEX;
+                update_sitter_only("");
+               
             }
             else
             {
@@ -520,12 +621,16 @@ default
             }
             if (num == 90299)
             {
-                MENU_LIST = DATA_LIST = POS_ROT_LIST = [];
+                MENU_LIST =  [];
+                // Optional, keeps state tidy during a full rebuild:
+                FIRST_INDEX = -1;
+                ANIM_INDEX  = -1;
                 return;
             }
             if (num == 90070)
             {
                 CONTROLLER = MY_SITTER = id;
+                update_sitter_only(MY_SITTER);
                 menu_page = 0;
                 current_menu = -1;
                 menu_channel = ((integer)llFrand(0x7FFFFF80) + 1) * -1; // 7FFFFF80 = max float < 2^31
@@ -554,48 +659,77 @@ default
                     }
                 }
                 MENU_LIST = llListInsertList(MENU_LIST, [llList2String(data, 0)], place_to_add);
-                DATA_LIST = llListInsertList(DATA_LIST, [llList2String(data, 1)], place_to_add);
-                POS_ROT_LIST = llListInsertList(POS_ROT_LIST, [0, 0], place_to_add * 2);
-                if (llGetListLength(data) == 4)
-                {
-                    if (FIRST_INDEX == -1)
-                    {
-                        FIRST_INDEX = place_to_add;
-                    }
-                    if (index != -1)
-                    {
-                        place_to_add = index;
-                    }
-                    POS_ROT_LIST = llListReplaceList(POS_ROT_LIST, [(vector)llList2String(data, 2), (vector)llList2String(data, 3)], place_to_add * 2, place_to_add * 2 + 1);
-                    ANIM_INDEX = place_to_add;
-                    send_anim_info(TRUE);
-                    memory();
+                
+                // After insert, trim memory by moving MENU flags to LSD and keeping DATA_LIST
+                // only for buttons. Identify entry type by prefix.
+                string entry = llList2String(MENU_LIST, place_to_add);
+               
+                string head2 = llGetSubString(entry, 0, 1);
+                if (head2 == "M:") {
+                    string mname = llGetSubString(entry, 2, -1);
+                    string flags = llList2String(data, 1);
+                    llLinksetDataWrite("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags", flags);
                 }
+                else if (head2 == "B:") { // Button row
+                    string blabel = llGetSubString(entry, 2, -1);
+                    string bkey   = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":B:" + blabel;
+                    llLinksetDataWrite(bkey, llList2String(data, 1)); // legacy "n|msg|id"
+                }
+                else if (head2 == "T:") {
+                    // title: no payload
+                }
+                else {
+                    // Pose row: either "P:<name>" or a plain Y pose
+                    string kind; string name;
+                    if (llGetSubString(entry, 0, 1) == "P:") { kind = "P"; name = llGetSubString(entry, 2, -1); }
+                    else { kind = "Y"; name = entry; }
+                
+                    string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
+                    llLinksetDataWrite(base + "seq", llList2String(data, 1));
+                    if (llGetListLength(data) >= 4) {
+                        llLinksetDataWrite(base + "p", llList2String(data, 2));
+                        llLinksetDataWrite(base + "r", llList2String(data, 3));
+                    }
+                    memory();
+                    return;
+                }
+                
                 return;
             }
-            if (num == 90301)
+           if (num == 90301)
             {
                 if (index != -1)
                 {
-                    one = llGetListLength(data);
-                    data = [(vector)llList2String(data, 1), (vector)llList2String(data, 2)];
-
-                    // LSL::
-                    // Reuse the preexisting vectors when possible, to save memory
-                    if ((two = llListFindList(POS_ROT_LIST, llList2List(data, 0, 0))) != -1)
-                        data = llList2List(POS_ROT_LIST, two, two) + llList2List(data, 1, 1);
-                    if ((two = llListFindList(POS_ROT_LIST, llList2List(data, 1, 1))) != -1)
-                        data = llList2List(data, 0, 0) + llList2List(POS_ROT_LIST, two, two);
-                    // ::LSL
-
-                    POS_ROT_LIST = llListReplaceList(POS_ROT_LIST, data, index * 2, index * 2 + 1);
-                    if (one != 3)
+                    // id payload format from [AV]sitA: "<pose>|<pos>|<rot>"
+                    string menu_name = llList2String(MENU_LIST, index);
+            
+                    string kind; string name;
+                    if (llGetSubString(menu_name, 0, 1) == "P:")
+                    {
+                        kind = "P";
+                        name = llGetSubString(menu_name, 2, -1);
+                    }
+                    else
+                    {
+                        kind = "Y";
+                        name = menu_name;
+                    }
+            
+                    string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
+            
+                    // data[1] = pos, data[2] = rot (strings)
+                    llLinksetDataWrite(base + "p", llList2String(data, 1));
+                    llLinksetDataWrite(base + "r", llList2String(data, 2));
+            
+                    // Maintain old behavior: if it wasn't a 3-field parse (rare), ping A to refresh live
+                    if (llGetListLength(data) != 3)
                     {
                         send_anim_info(FALSE);
                     }
                 }
                 return;
             }
+
             if (num == 90302)
             {
                 number_of_sitters = llList2Integer(data, 0);
@@ -630,24 +764,65 @@ default
                 while (++i < llGetListLength(MENU_LIST))
                 {
                     llSleep(0.5);
-                    llMessageLinked(LINK_THIS, 90022
-                                   ,   "S:" + llList2String(MENU_LIST, i)
-                                     + "|" + llList2String(DATA_LIST, i)
-                                   , (string)SCRIPT_CHANNEL
-                                   );
+                    string mi = llList2String(MENU_LIST, i);
+                    string pref2 = llGetSubString(mi, 0, 1);
+
+                    string payload = "";
+                    if (pref2 == "M:") {
+                        string mname = llGetSubString(mi, 2, -1);
+                        payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":M:" + mname + ":flags");
+                    }
+                    else if (pref2 == "P:") {
+                        string name = llGetSubString(mi, 2, -1);
+                        payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":P:" + name + ":seq");
+                    }
+                    else if (pref2 == "B:") {
+                        string blabel = llGetSubString(mi, 2, -1);
+                        payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":B:" + blabel);
+                    }
+                    else if (pref2 == "T:") {
+                        // titles have no payload
+                    }
+                    else {
+                        // Y pose
+                        string name = mi;
+                        payload = llLinksetDataRead("AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":Y:" + name + ":seq");
+                    }
+                    llMessageLinked(LINK_THIS, 90022, "S:" + mi + "|" + payload, (string)SCRIPT_CHANNEL);
+
+
                 }
                 i = -1;
-                while (++i < llGetListLength(MENU_LIST))
+               while (++i < llGetListLength(MENU_LIST))
                 {
-                    if (llList2Vector(POS_ROT_LIST, i * 2) != ZERO_VECTOR)
+                    string menu_name = llList2String(MENU_LIST, i);
+                
+                    string kind; string name;
+                    if (llGetSubString(menu_name, 0, 1) == "P:")
+                    {
+                        kind = "P";
+                        name = llGetSubString(menu_name, 2, -1);
+                    }
+                    else
+                    {
+                        kind = "Y";
+                        name = menu_name;
+                    }
+                
+                    string base = "AVS2:AVPOS:S" + (string)SCRIPT_CHANNEL + ":" + kind + ":" + name + ":";
+                    string ps = llLinksetDataRead(base + "p");
+                    string rs = llLinksetDataRead(base + "r");
+                
+                    // Only dump if we have something meaningful
+                    if (ps != "" && (vector)ps != ZERO_VECTOR)
                     {
                         llSleep(0.2);
-                        llMessageLinked(LINK_THIS, 90022
-                                       , "{" + llList2String(MENU_LIST, i) + "}"
-                                             + llList2String(POS_ROT_LIST, i * 2)
-                                             + llList2String(POS_ROT_LIST, i * 2 + 1)
-                                       , (string)SCRIPT_CHANNEL
-                                       );
+                        llMessageLinked(
+                            LINK_THIS,
+                            90022,
+                            "{" + menu_name + "}" + ps + rs,
+                            (string)SCRIPT_CHANNEL
+                        );
                     }
                 }
                 llMessageLinked(LINK_THIS, 90021, (string)SCRIPT_CHANNEL, "");
@@ -695,3 +870,4 @@ default
         }
     }
 }
+/* --------------- end [AV]sitB --------------- */

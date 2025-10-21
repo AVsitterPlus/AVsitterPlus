@@ -38,6 +38,18 @@ For increased script memory, scripts can be run through [LSL-PyOptimizer online]
 
 If you distribute the scripts in this repository or a derivation, you may only use our brand as permitted. See our [Trademark Guidelines](/TRADEMARK.mediawiki) for permitted use of the AVsitter&trade; brand. We also suggest [http://fossmarks.org](http://fossmarks.org) for a practical guide to understanding trademarks in the context of Free and Open Source Software.
 
+## Maintaining branches
+
+To keep long-lived topic branches such as `work` while ensuring that `master` mirrors the latest upstream state, you can force-reset `master` against the upstream repository without deleting other branches:
+
+```bash
+git fetch upstream
+git checkout master
+git reset --hard upstream/master
+```
+
+This sequence rewinds the local `master` branch to match the canonical project history while leaving other branches untouched.
+
 ---
 
 Second Life&reg; is a trademark of Linden Research, Inc. AVsitter&trade; is not affiliated with or sponsored by Linden Research.

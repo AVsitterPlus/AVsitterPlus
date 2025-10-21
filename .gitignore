@@ -13,6 +13,7 @@ AVsitter2/AVsitter2-oss.zip
 *.lslo
 *.oss
 
+tmp
 .project
 .buildpath
 .settings
