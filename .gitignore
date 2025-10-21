@@ -5,13 +5,16 @@ MARKETPLACE.md
 optimized
 
 # Release
-AVsitter2/AVsitter2.zip
-AVsitter2/AVsitter2-oss.zip
+AVsitterPlus/AVsitterPlus.zip
+AVsitterPlus/AVsitterPlus-oss.zip
 
 # Compressed/optimized/processed LSL scripts
 *.lslz
 *.lslo
 *.oss
+
+# Temporary file backups and patch creation
+*.00
 
 tmp
 .project

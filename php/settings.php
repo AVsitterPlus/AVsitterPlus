@@ -4,6 +4,7 @@
 MIT License
 
 Copyright (c) the AVsitter Contributors (http://avsitter.github.io)
+Copyright © Truth & Beauty Lab (http://avsitterplus.github.io)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -279,7 +280,7 @@ function email_death($error){
         $body.= $key_name . " = " . $key_value . "\n";
     }
     $to = $GLOBALS['email_to'];
-    $subject = "avsitter: $error";
+    $subject = "AVsitterPlus: $error";
     $email_headers = "From: ". $GLOBALS['email_from'] ."\r\n" . "X-Mailer: php";
     mail($to, $subject, $body, $email_headers);
     die($error);
