@@ -142,7 +142,7 @@ However, when the context requires the use of black-and-white graphics and the l
 
 ==Where to get further information==
 
-If you have any questions about this Policy, would like to ask about the use of our Marks in ways not described in the Policy, or bring attention to any abuse of our Marks, please open an issue in the [https://github.com/missyrestless/AVsitterPlus/issues AVsitterPlus GitHub repository].
+If you have any questions about this Policy, would like to ask about the use of our Marks in ways not described in the Policy, or bring attention to any abuse of our Marks, please open an issue in the [https://github.com/AVsitterPlus/AVsitterPlus/issues AVsitterPlus GitHub repository].
 
 ==General considerations about trademarks and their use==
 

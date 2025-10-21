@@ -6,11 +6,11 @@ If you would prefer a packaged version of the latest release, and to receive pac
 
 ## Importing the AVsitterPlus scripts into Second Life / OpenSim
 
-Quick summary: Download the scripts from the [releases page](https://github.com/missyrestless/AVsitterPlus/releases); name them in the viewer the same as in the zip file but without extension, saving all of them with Mono enabled; create an AVP_helper *object*, put the AVP_helperscript *script* inside and take it; create an AVpos notecard, add something to it and save it.
+Quick summary: Download the scripts from the [releases page](https://github.com/AVsitterPlus/AVsitterPlus/releases); name them in the viewer the same as in the zip file but without extension, saving all of them with Mono enabled; create an AVP_helper *object*, put the AVP_helperscript *script* inside and take it; create an AVpos notecard, add something to it and save it.
 
 Step-by-step guide:
 
-1. Visit the [AVsitterPlus project releases page](https://github.com/missyrestless/AVsitterPlus/releases) and download the `.zip` file for the latest AVsitterPlus release to your computer.
+1. Visit the [AVsitterPlus project releases page](https://github.com/AVsitterPlus/AVsitterPlus/releases) and download the `.zip` file for the latest AVsitterPlus release to your computer.
 
 2. Unpack the file you downloaded to a folder where you plan on keeping your AVsitterPlus distributions. The file for Second Life contains `.lslo` and `.lsl` scripts; the file for OpenSim contains `.oss` scripts.
 
