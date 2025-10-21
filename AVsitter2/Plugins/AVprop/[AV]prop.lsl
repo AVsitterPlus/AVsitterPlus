@@ -14,7 +14,7 @@
  * instructions can be found at http://avsitter.github.io
  */
 
-string #version = "2.2p04";
+string version = "2.3";
 string notecard_name = "AVpos";
 string main_script = "[AV]sitA";
 key key_request;
