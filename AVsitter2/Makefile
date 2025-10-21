@@ -55,6 +55,7 @@ OPTIMIZED=[AV]sitA.lslo\
  Utilities/AVpos-generator.lslo\
  Utilities/Anim-perm-checker.lslo\
  Utilities/MLP-converter.lslo\
+ Utilities/PMAC-Converter.lslo\
  Utilities/Missing-anim-finder.lslo
 
 UNOPTIMIZED=Plugins/AVcontrol/LockGuard/[AV]LockGuard.lsl\
@@ -80,6 +81,7 @@ OPENSIM=[AV]sitA.oss\
  Utilities/AVpos-shifter.oss\
  Utilities/Missing-anim-finder.oss\
  Utilities/MLP-converter.oss\
+ Utilities/PMAC-Converter.oss\
  Utilities/Noob-detector.oss
 
 all: $(SLZIP) $(OSZIP)
