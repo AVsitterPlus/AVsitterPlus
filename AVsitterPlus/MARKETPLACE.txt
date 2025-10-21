@@ -1,0 +1,51 @@
+AVsitterPlus Marketplace listing text
+==================================
+
+AVSITTERPLUS™ ★ REVOLUTIONARY ★ Multi-Pose-System!
+--------------------------------------------------
+
+
+► VERY IMPORTANT NOTICE
+
+AVsitter and plugins were made open-source on 31 July 2017 and can be freely obtained from the project's GitHub repository (https://avsitter.github.io). AVsitterPlus is a fork of the AVsitter source code with many improvements, enhancements, updates, and bug fixes. The most recent release of AVsitter was in March of 2018 and the latest commit to the AVsitter repository was in December of 2021. AVsitterPlus incorporates changes made since 2018 along with integration of work done on several forks that were never merged.
+
+The official packaged AVsitterPlus will continue to be available here on the marketplace. Proceeds from sales of the official packaged AVsitterPlus are shared with the project's open-source contributors and will help support continued development.
+
+► BENEFITS TO PURCHASING THE OFFICIAL PACKAGED AVSITTERPLUS
+
+* the latest release in-world, packaged and “ready to go”
+* automatic in-world updates of new packaged releases
+* over 40 example items showing AVsitterPlus's many features at work - a valuable learning tool
+* optimized LSL scripts for increased script memory 
+* and by purchasing you'll be supporting AVsitterPlus's continued development
+
+Note: Those who purchased AVsitterPlus in the past will continue to receive in-world updates without needing to purchase it again.
+
+----------------------------------------------------------------------------------------------------------
+
+AVsitterPlus™ is designed as the ultimate in pose systems for Second Life furniture, with powerful and easy to use scripts that allow you to create and sell furniture with perfectly positioned poses. Easily create everything from simple single animation chairs to feature rich couples furniture - without poseballs! AVsitterPlus is ideal for mesh and sculpties as well as "traditional" prim furniture.
+
+► Features
+
+✓ Unique furniture pose system goes beyond what any other can do in Second Life!
+✓ Suitable for all types of furniture and vehicles too!
+✓ Visually set up your poses with the SL building tools.
+✓ Set up sits for many avatars, each with their own animation menu!
+✓ Supports 300 poses per avatar, controlled via menu.
+✓ Easily set up couples and group poses with position "swap" ability.
+✓ Allows submenus of any depth, and addition of custom buttons.
+✓ Comprehensive instructions, videos and examples included!
+✓ Optional security to restrict menu access to ALL/GROUP/OWNER
+✓ API allows for animation sequences, custom scripting, and much more!
+✓ Pose memory stores personal adjustments saved by avatars.
+✓ Instant ready - no need for customers to wait for the script to load when rezzed.
+
+PLEASE: READ THE INSTRUCTIONS AT https://avsitterplus.github.io BEFORE PURCHASE, TO MAKE SURE IT IS RIGHT FOR YOU :)
+
+► Permissions
+
+Scripts are fullperm. Example items are no-transfer.
+
+► Purchase enquiries
+
+If you have a Marketplace or purchase related enquiry please contact *Missy Restless* with a full description. Messages will be checked every 3-4 days, so please be patient awaiting a response.

@@ -1,10 +1,10 @@
-=AVsitter Trademark Guidelines 0.1=
+=AVsitterPlus Trademark Guidelines 0.1=
 
 __TOC__
 
 ==Introduction==
 
-This document, the "Policy," outlines the AVsitter project's (the "Project") policy for trademark use.  While our software is available under a free and open source software license, the copyright license does not include an implied right or license to use our trademarks. 
+This document, the "Policy," outlines the AVsitterPlus project's (the "Project") policy for trademark use.  While our software is available under a free and open source software license, the copyright license does not include an implied right or license to use our trademarks. 
 
 The role of trademarks is to provide assurance about the quality of the products or services with which the trademark is associated. But because an open source license allows your unrestricted modification of the software, we cannot be sure that your modifications to the software are ones that will not be misleading if distributed under the same name. This Policy describes the circumstances under which you may use our trademarks. 
 
@@ -28,14 +28,14 @@ This Policy covers:
 ! align="left"| Mark
 ! Common descriptive name for the goods or services
 |-
-|AV and [AV]
-|prefixes used broadly throughout the AVsitter range of virtual world products.
+|AVP and AVP_
+|prefixes used broadly throughout the AVsitterPlus range of virtual world products.
 |-
-|AVsitter&trade;
+|AVsitterPlus&trade;
 |furniture pose system for virtual worlds.
 |-
-|AVsit&trade;
-|short form of AVsitter, and main script name.
+|AVP_sit&trade;
+|short form of AVsitterPlus, and main script name.
 |-
 |AVmenu&trade;
 |menu creation system.
@@ -53,15 +53,13 @@ This Policy covers:
 |script plugin to enable creation of pose sequences.
 |}
 
-2. Our logos (the "Logos"):
+2. Our logo (the "Logo"):
 
-[[Image:images/AVsitter-logo.jpg]]
-
-[[Image:images/AVsitter-logo2.jpg]]
+[[Image:images/AVsitterPlus-Logo.png]]
 
 ==Universal considerations for all uses==
 
-Whenever you use one of the Marks, you must always do so in a way that does not mislead anyone, either directly or by omission, about exactly what they are getting and from whom. The law reflects this requirement in two major ways described in more detail [[#general-considerations-about-trademarks-and-their-use|below]]: it prohibits creating a [[#what-is-likelihood-of-confusion|"likelihood of confusion"]] but allows for [[#what-is-nominative-use|"nominative use."]] For example, you cannot say you are distributing the AVsitter software when you're distributing a modified version of it, because people would be confused when they are not getting the same features and functionality and support they would get if they obtain the software directly from us. You also cannot use our logo on your website in a way that suggests that your website is an official website or that we endorse your website. You can, though, say you like the AVsitter software, that you participate in the AVsitter community, that you are providing an unmodified version of the AVsitter software, or that you wrote a book describing how to use the AVsitter software.
+Whenever you use one of the Marks, you must always do so in a way that does not mislead anyone, either directly or by omission, about exactly what they are getting and from whom. The law reflects this requirement in two major ways described in more detail [[#general-considerations-about-trademarks-and-their-use|below]]: it prohibits creating a [[#what-is-likelihood-of-confusion|"likelihood of confusion"]] but allows for [[#what-is-nominative-use|"nominative use."]] For example, you cannot say you are distributing the AVsitterPlus software when you're distributing a modified version of it, because people would be confused when they are not getting the same features and functionality and support they would get if they obtain the software directly from us. You also cannot use our logo on your website in a way that suggests that your website is an official website or that we endorse your website. You can, though, say you like the AVsitterPlus software, that you participate in the AVsitterPlus community, that you are providing an unmodified version of the AVsitterPlus software, or that you wrote a book describing how to use the AVsitterPlus software.
 
 This fundamental requirement, that it is always clear to people what they are getting and from whom, is reflected throughout this Policy. It should also serve as your guide if you are not sure about how you are using the Marks.
 
@@ -83,27 +81,27 @@ See [[#universal-considerations-for-all-uses|Universal considerations for all us
 
 ===Distribution of unmodified source code or unmodified executable code we have compiled===
 
-When you redistribute an unmodified copy of our software, you are not changing the quality or nature of it.  Therefore, you may retain the Word Marks as we have placed them in the software (for example, the Word Mark AVsitter as it appears in the software menu). This kind of use only applies if you are redistributing an official distribution or scripts from the Project that have not been changed in any way (for example, you have placed unmodified scripts inside products you distribute).
+When you redistribute an unmodified copy of our software, you are not changing the quality or nature of it.  Therefore, you may retain the Word Marks as we have placed them in the software (for example, the Word Mark AVsitterPlus as it appears in the software menu). This kind of use only applies if you are redistributing an official distribution or scripts from the Project that have not been changed in any way (for example, you have placed unmodified scripts inside products you distribute).
 
 In addition, you may retain the Word Marks as we have placed them in the software in versions of the software you have modified provided that modifications are limited to switching on or off features already included in the software, translations into other languages, or incorporating a small number of minor changes or bug-fix patches without making significant change to existing functionality.
 
 ===Distribution of executable code that you have compiled, or modified source code===
 
-You may use the Word Marks, but not the Logos, to truthfully describe the origin of the software that you are providing, that is, that the code you are distributing is a modification of our software. You may say, for example, that "this software is derived from the source code for AVsitter software."
+You may use the Word Marks, but not the Logo, to truthfully describe the origin of the software that you are providing, that is, that the code you are distributing is a modification of our software. You may say, for example, that "this software is derived from the source code for AVsitterPlus software."
 
-Of course, you can place your own trademarks or logos on versions of the software to which you have made substantive modifications, because by modifying the software you have become the origin of that exact version.  In that case, you should not use our Word Marks, or Logos.
+Of course, you can place your own trademarks or logo on versions of the software to which you have made substantive modifications, because by modifying the software you have become the origin of that exact version.  In that case, you should not use our Word Marks, or Logo.
 
 ===Statements about compatibility, interoperability or derivation===
 
-You may use the Word Marks, but not the Logos, to truthfully describe the relationship between your software and the Project. Our Mark should be used after a verb or preposition that describes the relationship between your software and ours. So you may say, for example, "Bob's software for the AVsitter platform" but may not say "Bob's AVsitter software." Some other examples that may work for you are:
+You may use the Word Marks, but not the Logo, to truthfully describe the relationship between your software and the Project. Our Mark should be used after a verb or preposition that describes the relationship between your software and ours. So you may say, for example, "Bob's software for the AVsitterPlus platform" but may not say "Bob's AVsitterPlus software." Some other examples that may work for you are:
 
-* [Your software] works with AVsitter software
-* [Your software] uses AVsitter software
-* [Your software] is compatible with AVsitter software
-* [Your software] is powered by AVsitter software
-* [Your software] is derived from AVsitter software
-* [Your software] for use with AVsitter software
-* [Your software] for AVsitter software
+* [Your software] works with AVsitterPlus software
+* [Your software] uses AVsitterPlus software
+* [Your software] is compatible with AVsitterPlus software
+* [Your software] is powered by AVsitterPlus software
+* [Your software] is derived from AVsitterPlus software
+* [Your software] for use with AVsitterPlus software
+* [Your software] for AVsitterPlus software
 
 ==Use for non-software goods and services==
 
@@ -111,11 +109,11 @@ See [[#universal-considerations-for-all-uses|Universal considerations for all us
 
 ====Websites====
 
-You may use the Word Marks and Logos, on your webpage to show your support for the Project as long as:
+You may use the Word Marks and Logo, on your webpage to show your support for the Project as long as:
 
 * The website has branding that is easily distinguished from the Project;
 * Your own branding and naming is more prominent than any Project Marks;
-* The Logos hyperlink to the Project website;
+* The Logo hyperlink to the Project website;
 * The site does not mislead customers into thinking that either your website, service, or product is our website, service, or product; and
 * The site clearly states that you are not affiliated with or endorsed by the Project.
 
@@ -133,8 +131,8 @@ You can use the Word Marks as part of your user group or educational group name 
 ==Word Marks usage==
 
 Always use Word Marks in their exact form with the correct spelling, neither abbreviated, hyphenated, or combined with any other word or words.
-* Correct: AVsitter, avsitter, AVSITTER
-* Incorrect: AV-sitter, AV Sitter
+* Correct: AVsitterPlus, avsitterplus, AVSITTERPLUS
+* Incorrect: AV-sitter, AV Sitter, AV-sitterplus, AV-sitter-plus, AV Sitter Plus
 
 ==Logo usage==
 
@@ -144,7 +142,7 @@ However, when the context requires the use of black-and-white graphics and the l
 
 ==Where to get further information==
 
-If you have any questions about this Policy, would like to ask about the use of our Marks in ways not described in the Policy, or bring attention to any abuse of our Marks, please open an issue in the [https://github.com/AVsitter/AVsitter/issues AVsitter GitHub repository].
+If you have any questions about this Policy, would like to ask about the use of our Marks in ways not described in the Policy, or bring attention to any abuse of our Marks, please open an issue in the [https://github.com/missyrestless/AVsitterPlus/issues AVsitterPlus GitHub repository].
 
 ==General considerations about trademarks and their use==
 
