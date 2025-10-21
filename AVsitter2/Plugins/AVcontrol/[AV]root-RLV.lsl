@@ -685,20 +685,20 @@ state running
 
                 if (index > -1)
                 {
+                        string new_pose = llList2String(data,1);
+                        string original_pose = llList2String(CAPTIVE_POSES_FLAGS, index - 1);
                         if (llList2Integer(CAPTIVE_POSES_FLAGS, index) == 2)
                         {
-                                                string new_pose = llList2String(data,1);
-                                                string original_pose = llList2String(CAPTIVE_POSES_FLAGS, index - 1);
-                                                if (new_pose != original_pose && original_pose != "")
-                                                {
-                                                        // reapply the correct previous pose
-                                                        llMessageLinked(LINK_THIS, 90000, llList2String(CAPTIVE_POSES_FLAGS, index - 1), id);
-                                                }
-                                                else
-                                                {
-                                                        // either it's now right or we didn't have a previous pose
-                                                        CAPTIVE_POSES_FLAGS = llListReplaceList(CAPTIVE_POSES_FLAGS, [new_pose, 0], index - 1, index);
-                                                }
+                                if (new_pose != original_pose && original_pose != "")
+                                {
+                                        // reapply the correct previous pose
+                                        llMessageLinked(LINK_THIS, 90000, llList2String(CAPTIVE_POSES_FLAGS, index - 1), id);
+                                }
+                                else
+                                {
+                                        // either it's now right or we didn't have a previous pose
+                                        CAPTIVE_POSES_FLAGS = llListReplaceList(CAPTIVE_POSES_FLAGS, [new_pose, 0], index - 1, index);
+                                }
                         }
                         else if (llList2Integer(CAPTIVE_POSES_FLAGS, index) == 0)
                         {
