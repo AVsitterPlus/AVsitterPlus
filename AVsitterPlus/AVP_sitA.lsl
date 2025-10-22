@@ -15,7 +15,7 @@
  */
 
 string product = "AVsitterPlus™";
-string version = "2.3";
+string version = "2.3beta";
 string notecard_name = "AVpos";
 string main_script = "AVP_sitA";
 string memoryscript = "AVP_sitB";

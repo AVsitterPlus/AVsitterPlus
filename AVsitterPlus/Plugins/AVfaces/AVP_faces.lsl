@@ -42,7 +42,7 @@ integer IsInteger(string data)
     return data != "" && (string)((integer)("1" + data)) == "1" + data;
 }
 
-string version = "2.3";
+string version = "2.3beta";
 string notecard_name = "AVpos";
 string main_script = "AVP_sitA";
 key key_request;

@@ -15,6 +15,9 @@ DRAFT=
 PACKAGE=1
 BRANCH="master"
 VERSION=
+
+[ -f VERSION ] && source VERSION
+
 while getopts "b:cdpuv:" flag; do
     case $flag in
         b)
@@ -39,7 +42,7 @@ while getopts "b:cdpuv:" flag; do
 done
 shift $(( OPTIND - 1 ))
 
-[ "${VERSION}" ] || VERSION="2.3"
+[ "${VERSION}" ] || VERSION="2.3beta"
 ANNO="AVsitterPlus release, Version ${VERSION}"
 
 if [ -f ${HOME}/.mrprivate ]; then
@@ -48,6 +51,22 @@ else
   echo "ERROR: Could not locate ${HOME}/.mrprivate"
   exit 1
 fi
+
+SCRIPT_PATH="$(
+  cd "$(dirname "$0")"
+  pwd -P
+)"
+have_real=$(type -p realpath)
+[ "${have_real}" ] && SCRIPT_PATH="$(realpath $SCRIPT_PATH)"
+
+[ -d ${SCRIPT_PATH}/AVsitterPlus ] || {
+  echo "ERROR: ${SCRIPT_PATH}/AVsitterPlus does not exist. Exiting."
+  exit 1
+}
+cd ${SCRIPT_PATH}/AVsitterPlus
+make clean
+make release
+cd ${SCRIPT_PATH}
 
 gh release create v${VERSION} ${DRAFT} \
                   --title "${ANNO}" \

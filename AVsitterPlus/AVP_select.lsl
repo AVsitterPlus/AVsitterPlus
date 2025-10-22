@@ -14,7 +14,7 @@
  */
 
 string product = "AVsitterPlus™ seat select";
-string version = "2.3";
+string version = "2.3beta";
 integer select_type;
 list BUTTONS;
 integer reading_notecard_section = -1;

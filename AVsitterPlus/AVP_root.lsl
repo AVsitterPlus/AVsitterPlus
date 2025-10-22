@@ -12,7 +12,7 @@
  * receive automatic updates and other benefits! All details and user
  * instructions can be found at http://avsitterplus.github.io
  */
-//string version = "2.3";
+//string version = "2.3beta";
 string script_basename = "AVP_sitA";
 string menu_script = "AVP_menu";
 key A;
