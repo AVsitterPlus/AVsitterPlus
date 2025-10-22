@@ -1,0 +1,12 @@
+# Auto-assign seats by gender
+#
+# You can designate a [SITTER](/avsitterplus_avpos.html#sitter) for male/female
+# shaped avatars by adding an "M" or "F" after the sitter name.
+# When an avatar sits, they will be assigned to the first unoccupied sitter
+# that matches the gender of their shape, if available. e.g:
+
+SITTER 0|Female seat|F
+SITTER 1|Male seat|M
+
+# If the seat is not gender specific, then don't assign a gender. e.g:
+SITTER 2|Friend seat

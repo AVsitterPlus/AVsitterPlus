@@ -1,0 +1,16 @@
+# Example notecard for AVP_menu with AVP_prop. Demonstrates use of prop groups (shelf1,shelf2,shelf3).
+
+TEXT Welcome to my display case :)\nChoose items to rez!\n
+BUTTON Books
+BUTTON Glasses
+BUTTON Photo
+BUTTON Fruit
+BUTTON Plates
+BUTTON Vase
+BUTTON [CLEAR]
+PROP Books|books|shelf1|<-0.042320, 0.020645, 1.875854>|<0.000000, 0.000000, 0.000000>
+PROP Glasses|glasses|shelf1|<-0.270195, -0.014359, 1.763062>|<0.000000, 0.000000, -84.350010>
+PROP Photo|photo|shelf2|<-0.001717, -0.056343, 1.234741>|<78.650010, 6.850002, 1.349999>
+PROP Fruit|fruit|shelf2|<0.014526, 0.002861, 1.214783>|<180.000000, 0.000000, 0.000000>
+PROP Plates|plates|shelf3|<0.199730, -0.000938, 0.434692>|<-90.000000, 73.000010, 0.000000>
+PROP Vase|vase|shelf3|<-0.022728, -0.019066, 0.440918>|<0.000000, 0.000009, 174.400100>
