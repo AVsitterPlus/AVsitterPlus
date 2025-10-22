@@ -1135,9 +1135,9 @@ default
         if (perm & PERMISSION_TRIGGER_ANIMATION)
         {
             llStopAnimation("sit");
-            if (llGetInventoryType("AVhipfix") == INVENTORY_ANIMATION)
+            if (llGetInventoryType("AVP_hipfix") == INVENTORY_ANIMATION)
             {
-                llStartAnimation("AVhipfix");
+                llStartAnimation("AVP_hipfix");
             }
             integer animation_menu_function;
             if (llGetPermissionsKey() != reused_key)

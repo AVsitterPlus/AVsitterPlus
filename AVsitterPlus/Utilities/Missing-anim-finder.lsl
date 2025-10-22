@@ -92,7 +92,7 @@ default
 
                     index = llListFindList(ALL_USED_ANIMS, [anim_basename]);
 
-                    if (index == -1 && llGetInventoryName(INVENTORY_ANIMATION, i) != "AVhipfix")
+                    if (index == -1 && llGetInventoryName(INVENTORY_ANIMATION, i) != "AVP_hipfix")
                     {
                         Owner_Say("Animation '" + llGetInventoryName(INVENTORY_ANIMATION, i) + "' found in inventory but not used in notecard!");
                         UNUSED_ANIMS += llGetInventoryName(INVENTORY_ANIMATION, i);
