@@ -41,26 +41,27 @@ OPTIMIZED=AVP_sitA.lslo\
  AVP_root-security.lslo\
  AVP_root.lslo\
  AVP_select.lslo\
- Plugins/AVcamera/AVP_camera.lslo\
- Plugins/AVcontrol/Xcite!-Sensations/AVP_Xcite!.lslo\
- Plugins/AVcontrol/AVP_root-RLV-extra.lslo\
- Plugins/AVcontrol/AVP_root-RLV.lslo\
- Plugins/AVcontrol/AVP_root-control.lslo\
- Plugins/AVfaces/AVP_faces.lslo\
- Plugins/AVfavs/AVP_favs.lslo\
- Plugins/AVprop/AVP_menu.lslo\
- Plugins/AVprop/AVP_prop.lslo\
- Plugins/AVprop/AVP_object.lslo\
- Plugins/AVsequence/AVP_sequence.lslo\
+ Plugins/AVP_camera/AVP_camera.lslo\
+ Plugins/AVP_control/Xcite!-Sensations/AVP_Xcite!.lslo\
+ Plugins/AVP_control/AVP_root-RLV-extra.lslo\
+ Plugins/AVP_control/AVP_root-RLV.lslo\
+ Plugins/AVP_control/AVP_root-control.lslo\
+ Plugins/AVP_control/LockGuard/AVP_LockGuard.lslo\
+ Plugins/AVP_control/LockGuard/AVP_LockGuard-object.lslo\
+ Plugins/AVP_control/LockMeister/AVP_LockMeister.lslo\
+ Plugins/AVP_faces/AVP_faces.lslo\
+ Plugins/AVP_favs/AVP_favs.lslo\
+ Plugins/AVP_prop/AVP_menu.lslo\
+ Plugins/AVP_prop/AVP_prop.lslo\
+ Plugins/AVP_prop/AVP_object.lslo\
+ Plugins/AVP_sequence/AVP_sequence.lslo\
  Utilities/AVpos-generator.lslo\
  Utilities/Anim-perm-checker.lslo\
  Utilities/MLP-converter.lslo\
  Utilities/PMAC-Converter.lslo\
  Utilities/Missing-anim-finder.lslo
 
-UNOPTIMIZED=Plugins/AVcontrol/LockGuard/AVP_LockGuard.lsl\
- Plugins/AVcontrol/LockGuard/AVP_LockGuard-object.lsl\
- Utilities/AVpos-shifter.lsl\
+UNOPTIMIZED=Utilities/AVpos-shifter.lsl\
  Utilities/Noob-detector.lsl
 
 OPENSIM=AVP_sitA.oss\
@@ -70,12 +71,12 @@ OPENSIM=AVP_sitA.oss\
  AVP_root.oss\
  AVP_root-security.oss\
  AVP_select.oss\
- Plugins/AVcamera/AVP_camera.oss\
- Plugins/AVfaces/AVP_faces.oss\
- Plugins/AVprop/AVP_menu.oss\
- Plugins/AVprop/AVP_object.oss\
- Plugins/AVprop/AVP_prop.oss\
- Plugins/AVsequence/AVP_sequence.oss\
+ Plugins/AVP_camera/AVP_camera.oss\
+ Plugins/AVP_faces/AVP_faces.oss\
+ Plugins/AVP_prop/AVP_menu.oss\
+ Plugins/AVP_prop/AVP_object.oss\
+ Plugins/AVP_prop/AVP_prop.oss\
+ Plugins/AVP_sequence/AVP_sequence.oss\
  Utilities/Anim-perm-checker.oss\
  Utilities/AVpos-generator.oss\
  Utilities/AVpos-shifter.oss\
