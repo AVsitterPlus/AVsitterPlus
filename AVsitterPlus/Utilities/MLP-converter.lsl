@@ -14,7 +14,7 @@
  */
 
 string product = "AVsitterPlus MLP converter";
-string version = "2.3";
+string version = "2.3beta";
 string notecard_basename = "AVpos";
 string notecard_name;
 list NOTECARDS = [notecard_name]; //OSS::list NOTECARDS; // Force error in LSO
