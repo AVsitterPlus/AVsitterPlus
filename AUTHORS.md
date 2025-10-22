@@ -8,4 +8,4 @@ Code Violet <`codeviolet@users.noreply.github.com`> is the initial author of AVs
 - mifi3000 <`mifi3000@users.noreply.github.com`>
 - Kyrah Abattoir <`kyrahabattoir@users.noreply.github.com`>
 
-Missy Restless is the initial author of AVsitterPlus, a fork of AVsitter started on 20-Oct-2025.
+Missy Restless <`missyrestless@gmail.com`> is the initial author of AVsitterPlus, a fork of AVsitter started on 20-Oct-2025.
