@@ -1,4 +1,4 @@
-/**
+/*
  * PMAC-converter - Convert PMAC version notecards to AVsitterPlus format
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
@@ -14,20 +14,18 @@
  *
  * Based on AVsitterPlus MLP converter
  *
- */
-  /**
-    @author: Zai Dium
-    @name: PMAC-Converter
-    @localfile: ?defaultpath\AVsitterPlus\AVsitterPlus\Utilities\?@name.lsl
-
-    Put this script in PMAC object
-    It will delete it self after finish
-    Copy results from chat into AVP_Positions in the object
-    Remove anything started ~~~
-    Remove any old script related to PMAC
-    Remove .menuxxxx notecards
-    Copy AVsitterPlus scripts into it
-    Enjoy
+ * @author: Zai Dium
+ * @name: PMAC-Converter
+ * @localfile: ?defaultpath\AVsitterPlus\AVsitterPlus\Utilities\?@name.lsl
+ *
+ *  Put this script in PMAC object
+ *  It will delete it self after finish
+ *  Copy results from chat into AVP_Positions in the object
+ *  Remove anything started ~~~
+ *  Remove any old script related to PMAC
+ *  Remove .menuxxxx notecards
+ *  Copy AVsitterPlus scripts into it
+ *  Enjoy
  */
 
 string product = "AVsitterPlus PMAC converter";

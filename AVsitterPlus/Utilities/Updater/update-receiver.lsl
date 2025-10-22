@@ -22,7 +22,7 @@
 integer pin = -29752;
 
 // Enter the list of allowed avatar UUIDs here.
-list admin_avatars = ["b30c9262-9abf-4cd1-9476-adcf5723c029", "f2e0ed5e-6592-4199-901d-a659c324ca94"];
+list admin_avatars = ["3506213c-29c8-4aa1-a38f-e12f6d41b804", "d648fb86-d59b-4d69-8d3c-d00862aec699"];
 
 default
 {
