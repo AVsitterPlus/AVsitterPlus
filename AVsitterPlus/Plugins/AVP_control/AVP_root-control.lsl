@@ -14,7 +14,7 @@
  */
 
 string product = "AVsitterPlus™ Menu Control";
-string version = "2.3beta";
+string version = "2.3.1";
 string security_script = "AVP_root-security";
 string RLV_script = "AVP_root-RLV";
 list DESIGNATIONS_NOW;

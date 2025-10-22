@@ -15,7 +15,7 @@
  */
 
 string product = "AVsitterPlus™";
-string version = "2.3beta";
+string version = "2.3.1";
 string BRAND;
 integer OLD_HELPER_METHOD;
 string main_script = "AVP_sitA";

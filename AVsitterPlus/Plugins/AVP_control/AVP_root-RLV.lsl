@@ -14,7 +14,7 @@
  */
 
 string product = "AVsitterPlus™ RLV";
-string version = "2.3beta";
+string version = "2.3.1";
 integer ignorenextswap;
 string notecard_name = "AVpos";
 string unDressScript = "AVP_root-RLV-extra";
