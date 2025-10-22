@@ -1,0 +1,152 @@
+# An example of submenus "Sitting" and "Laying".
+
+TOMENU Sitting
+TOMENU Laying
+
+MENU Sitting
+POSE Sit1|animation1
+POSE Sit2|animation2
+
+MENU Laying
+POSE Lay1|animation3
+POSE Lay2|animation4
+```
+
+### Two SITTERs with Submenus
+Multiple submenus in each SITTER. Note the "Laying" and "Kissing" submenus in each SITTER are within the "Couples" submenu.
+
+```
+SITTER 0
+TOMENU Singles
+TOMENU Couples
+
+MENU Singles
+POSE Sit1|animation1
+POSE Sit2|animation2
+
+MENU Couples
+TOMENU Laying
+TOMENU Kissing
+
+MENU Laying
+SYNC Lay1|couples1_Female
+SYNC Lay2|couples2_Female
+SYNC Lay3|couples3_Female
+
+MENU Kissing
+SYNC Kiss1|couples4_Female
+SYNC Kiss2|couples5_Female
+SYNC Kiss3|couples6_Female
+
+SITTER 1
+TOMENU Singles
+TOMENU Couples
+
+MENU Singles
+POSE Sit1|animation1
+POSE Sit2|animation2
+
+MENU Couples
+TOMENU Laying
+TOMENU Kissing
+
+MENU Laying
+SYNC Lay1|couples1_Male
+SYNC Lay2|couples2_Male
+SYNC Lay3|couples3_Male
+
+MENU Kissing
+SYNC Kiss1|couples4_Male
+SYNC Kiss2|couples5_Male
+SYNC Kiss3|couples6_Male
+```
+
+{% include important.html content="For further notecard examples, see the notecards inside the examples provided to you in the AVsitterPlus Examples [BOX]." %}
+
+## "Built-In" animation sequence
+
+You can play animations in a series simply by adding extra animations to the [POSE](/avsitterplus_avpos.html#pose) (or [SYNC](/avsitterplus_avpos.html#sync)) commands. The animations all share the same position/rotation in the notecard, therefore they *must* be designed to be played together. This can be a continuous scene OR simply regular looped animations that were made as a sequence compatible set (all using use the same position/rotation).
+
+The format for the notecard is as follows:
+
+    POSE <menu_name>|<animation>|<duration>|<animation>|<duration>|<animation>|<duration> ...
+
+or
+
+    SYNC <menu_name>|<animation>|<duration>|<animation>|<duration>|<animation>|<duration> ...
+
+e.g.
+
+    POSE Solo-SEQ|anim1|30|anim2|30|anim3|30
+
+When "Solo-SEQ" is selected, the animations will cycle between anim1, anim2 and anim3, playing each for 30 seconds.
+
+Usually a sequence will loop, but if a dash ( - ) is entered instead of a duration then the sequence will stop after playing. e.g.
+
+    POSE Solo-SEQ|anim1|30|anim2|-
+
+{% include important.html content="Be sure to examine the sequence furniture examples provided in the AVsitterPlus Examples [BOX]." %}
+
+{% include important.html content="For an alternate sequence method, see the [AVsequence&trade;](/avsitterplus_sequence.html) script." %}
+
+## Auto-assign by gender
+Determining the gender of an avatar's shape is [now possible](http://wiki.secondlife.com/wiki/OBJECT_BODY_SHAPE_TYPE), and can be used for automatic sitter and default pose assignment in AVsitterPlus. The gender of an avatar's shape can be set from the Appearance Editor in the SL viewer.
+
+### SITTER assignment
+You can designate a [SITTER](/avsitterplus_avpos.html#sitter) for male/female shaped avatars by adding an "M" or "F" after the sitter name. When an avatar sits, they will be assigned to the first unoccupied sitter that matches the gender of their shape, if available. e.g:
+
+```
+SITTER 0|Female seat|F
+...
+
+SITTER 1|Male seat|M
+...
+```
+
+If the seat is not gender specific, then don't assign a gender. e.g:
+
+```
+SITTER 2|Friend seat
+...
+```
+
+{% include important.html content="SITTER assignment will not work in cases where there are [SET](/avsitterplus_sittargets.html) defined. Support for this may be added in future." %}
+
+### Pose assignment
+Normally, the default pose to play will be the first in the sitter's menu. However, you can specify a different [POSE](/avsitterplus_avpos.html#pose) or [SYNC](/avsitterplus_avpos.html#sync) as the default for male/female shaped avatars by adding an "M" or "F" after the animation file name. e.g:
+
+```
+POSE SitF|Sit1|M
+POSE SitM|Sit2|F
+```
+
+## Variable speed animations
+
+You can include animations of variable speed by naming them with + or - at the end of the file name and including them in the furniture. These files will be used in place of the default when the speed setting is changed by use of << Softer & Harder >> buttons.
+
+e.g. if you have a POSE/SYNC as follows:
+
+    SYNC Walking|Walk01
+
+Then you can optionally include the animation files Walk01- (slower version) & Walk01+ (faster version) in addition to the Walk01 animation. Note, there should be no space between the animation name and the +/-.
+
+The << Softer & Harder >> buttons will only be shown in a submenu if &#124;V is added to the MENU line. e.g.
+
+    MENU Workout|V
+
+Pressing the << Softer & Harder >> buttons will change the speed to the slower/faster animations. The speed will remain set until changed or until all avatars stand up from the furniture.
+
+
+## Extra notecard commands
+Some additional notecard commands exist _([read here for more information](avsitterplus_SpecialCommands_AVpos.html))_:
+
+- [HELPER](/avsitterplus_SpecialCommands_AVpos.html#helper) - use the AVsitter1 style helper system, where you sit on the helper sticks.
+- [KFM](/avsitterplus_SpecialCommands_AVpos.html#kfm) - if the object uses [llSetKeyframedMotion()](http://wiki.secondlife.com/wiki/LlSetKeyframedMotion).
+- [LROT](/avsitterplus_SpecialCommands_AVpos.html#lrot) - positioning buttons to work relative to the local rotation of the root prim, instead of global co-ordinates.
+- [WARN](/avsitterplus_SpecialCommands_AVpos.html#warn) - disable the warning when there aren't enough prims for all sitters or checks for prop permissions.
+- DFLT 0 - don't revert to the default pose when all avatars stand (unless the last pose was a SYNC pose).
+- NOWIPE - tells the scripts not to wipe sittargets in other prims (use only if you have a good reason as you may end up with prims that have unnecessary SitTargets).
+
+{% include important.html content="Extra commands are not part of settings [DUMP] so you would need to remember to leave them at the top of your notecard." %}
+
+{% include links.html %}

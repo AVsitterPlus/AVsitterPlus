@@ -1,0 +1,8 @@
+# Default Pose Assignment
+#
+# Normally, the default pose to play will be the first in the sitter's menu.
+# However, you can specify a different pose or sync as the default for male/female
+# shaped avatars by adding an "M" or "F" after the animation file name. e.g:
+
+POSE SitF|Sit1|M
+POSE SitM|Sit2|F
