@@ -56,13 +56,15 @@ OPTIMIZED=AVP_sitA.lslo\
  Plugins/AVP_prop/AVP_object.lslo\
  Plugins/AVP_sequence/AVP_sequence.lslo\
  Utilities/pos-generator.lslo\
+ Utilities/pos-shifter.lslo\
  Utilities/Anim-perm-checker.lslo\
  Utilities/MLP-converter.lslo\
  Utilities/PMAC-Converter.lslo\
- Utilities/Missing-anim-finder.lslo
+ Utilities/Missing-anim-finder.lslo\
+ Utilities/Updater/update-receiver.lslo\
+ Utilities/Updater/update-sender.lslo
 
-UNOPTIMIZED=Utilities/pos-shifter.lsl\
- Utilities/Noob-detector.lsl
+UNOPTIMIZED=Utilities/Noob-detector.lsl
 
 OPENSIM=AVP_sitA.oss\
  AVP_sitB.oss\
