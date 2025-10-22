@@ -13,7 +13,7 @@
  * instructions can be found at http://avsitterplus.github.io
  */
 
-string version = "2.3beta";
+string version = "2.3.1";
 string notecard_name = "AVpos";
 string main_script = "AVP_sitA";
 key key_request;

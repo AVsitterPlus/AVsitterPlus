@@ -42,7 +42,7 @@ while getopts "b:cdpuv:" flag; do
 done
 shift $(( OPTIND - 1 ))
 
-[ "${VERSION}" ] || VERSION="2.3beta"
+[ "${VERSION}" ] || VERSION="2.3.1"
 ANNO="AVsitterPlus release, Version ${VERSION}"
 
 if [ -f ${HOME}/.mrprivate ]; then

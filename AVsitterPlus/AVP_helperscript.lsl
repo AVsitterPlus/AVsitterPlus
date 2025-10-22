@@ -15,7 +15,7 @@
 
 string registration_product = "AVsitterPlus";
 string product = "AVhelper";
-string version = "2.3beta";
+string version = "2.3.1";
 integer OLD_HELPER_METHOD;
 list colors = [<1,0.5,1>, <0.5,0.5,1>, <1,0.5,0.5>, <0.5,1,0.5>, <1,1,0.5>, <0.5,1,1>];
 integer helper_index;

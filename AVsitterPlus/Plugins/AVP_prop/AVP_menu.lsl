@@ -14,7 +14,7 @@
  */
 
 string product = "AVmenu™";
-string version = "2.3beta";
+string version = "2.3.1";
 integer verbose = 0;
 string prop_script = "AVP_prop";
 string notecard_name = "AVpos";

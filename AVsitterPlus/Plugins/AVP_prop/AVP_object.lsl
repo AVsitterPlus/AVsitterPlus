@@ -13,7 +13,7 @@
  * instructions can be found at http://avsitterplus.github.io
  */
 
-string version = "2.3beta";
+string version = "2.3.1";
 integer comm_channel;
 integer local_attach_channel = -2907539;
 integer listen_handle;
