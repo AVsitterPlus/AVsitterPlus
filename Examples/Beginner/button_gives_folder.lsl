@@ -1,6 +1,6 @@
 /******************************************************************
 * This example will give items in a folder when a BUTTON is pressed
-* You will need a line in the AVpos notecard to create the BUTTON:
+* You will need a line in the AVP_Positions notecard to create the BUTTON:
 * e.g. BUTTON Give Items|0
 ******************************************************************/
 

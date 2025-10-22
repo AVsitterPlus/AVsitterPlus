@@ -20,7 +20,7 @@ list BUTTONS;
 integer reading_notecard_section = -1;
 key notecard_key;
 key notecard_query;
-string notecard_name = "AVpos";
+string notecard_name = "AVP_Positions";
 string main_script = "AVP_sitA";
 string adjust_script = "AVP_adjuster";
 string helper_object = "AVP_helper";

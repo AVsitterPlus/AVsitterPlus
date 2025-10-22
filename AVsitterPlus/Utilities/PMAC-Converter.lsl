@@ -22,7 +22,7 @@
 
     Put this script in PMAC object
     It will delete it self after finish
-    Copy results from chat into AVpos in the object
+    Copy results from chat into AVP_Positions in the object
     Remove anything started ~~~
     Remove any old script related to PMAC
     Remove .menuxxxx notecards
@@ -32,7 +32,7 @@
 
 string product = "AVsitterPlus PMAC converter";
 string version = "1.0";
-string notecard_basename = "AVpos";
+string notecard_basename = "AVP_Positions";
 string notecard_name;
 list notecards = [];
 key notecard_query;

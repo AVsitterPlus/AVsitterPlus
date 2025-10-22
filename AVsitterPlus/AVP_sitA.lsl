@@ -16,7 +16,7 @@
 
 string product = "AVsitterPlus™";
 string version = "2.3.1";
-string notecard_name = "AVpos";
+string notecard_name = "AVP_Positions";
 string main_script = "AVP_sitA";
 string memoryscript = "AVP_sitB";
 string expression_script = "AVP_faces";
@@ -88,7 +88,7 @@ string SEP = "�"; // OSS::string SEP = "\x7F";
 float AVS_CROSS_GUARD = 5.0;
 
 /* --- LSD read helpers (tiny & safe) --- */
-string AVP_LSD_PFX = "AVS2:AVPOS:";
+string AVP_LSD_PFX = "AVS2:AVP_POSITIONS:";
 string avp_lsd_key(integer sitter, string kind, string name, string field) {
     return AVP_LSD_PFX + "S" + (string)sitter + ":" + kind + ":" + name + ":" + field;
 }

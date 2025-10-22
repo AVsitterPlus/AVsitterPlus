@@ -14,7 +14,7 @@
  */
 
 string version = "2.3.1";
-string notecard_name = "AVpos";
+string notecard_name = "AVP_Positions";
 string main_script = "AVP_sitA";
 key key_request;
 integer comm_channel;

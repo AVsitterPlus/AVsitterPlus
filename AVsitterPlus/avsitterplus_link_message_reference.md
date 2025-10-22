@@ -9,7 +9,7 @@ This page may provide additional info if the purpose of a link message is not in
 **AVsitterPlus uses link messages in the range 90000-90500.**
 
 ### 90000
-Play an animation defined in AVpos notecard.
+Play an animation defined in AVP_Positions notecard.
 
     lMessageLinked(LINK_THIS,90000,<POSE_NAME>,<CUSTOM>);
     
@@ -221,7 +221,7 @@ AVP_menu add PROP line to AVP_prop.
 AVP_adjuster add CAMERA line to AVP_camera.
 
 ### 90200
-Default integer for a BUTTON line in the AVpos notecard. Used to rez props. If UUID is specified, menu is returned to that avatar. A second UUID can be specified to rez the prop for one avatar, but return the menu to another.
+Default integer for a BUTTON line in the AVP_Positions notecard. Used to rez props. If UUID is specified, menu is returned to that avatar. A second UUID can be specified to rez the prop for one avatar, but return the menu to another.
 
 ### 90220
 Same as 90200 but no menu is returned. 
@@ -254,7 +254,7 @@ AVP_root-RLV tells AVP_root-RLV-extra to open "Un/Dress" menu.
 AVP_root-RLV tells AVP_root-RLV-extra to open "Restrict" menu.
 
 ### 90210
-Default integer for a SEQUENCE line in the AVpos notecard. Used by AVP_sequence.
+Default integer for a SEQUENCE line in the AVP_Positions notecard. Used by AVP_sequence.
 
 ### 90211
 AVP_control sends [CAPTURE] message to AVP_root-RLV.

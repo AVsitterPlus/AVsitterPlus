@@ -16,7 +16,7 @@
 string product = "AVsitterPlus™ RLV";
 string version = "2.3.1";
 integer ignorenextswap;
-string notecard_name = "AVpos";
+string notecard_name = "AVP_Positions";
 string unDressScript = "AVP_root-RLV-extra";
 string main_script = "AVP_sitA";
 string Dominant_name = "Dominant";

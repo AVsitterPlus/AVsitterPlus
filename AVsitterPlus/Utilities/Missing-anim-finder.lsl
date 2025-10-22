@@ -13,7 +13,7 @@
  * instructions can be found at http://avsitterplus.github.io
  */
 
-string notecard_basename = "AVpos";
+string notecard_basename = "AVP_Positions";
 integer variable1;
 key notecard_query;
 list ALL_USED_ANIMS = [notecard_query]; //OSS::list ALL_USED_ANIMS; // Force error in LSO

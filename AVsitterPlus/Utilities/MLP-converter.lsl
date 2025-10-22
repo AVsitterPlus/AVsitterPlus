@@ -15,7 +15,7 @@
 
 string product = "AVsitterPlus MLP converter";
 string version = "2.3.1";
-string notecard_basename = "AVpos";
+string notecard_basename = "AVP_Positions";
 string notecard_name;
 list NOTECARDS = [notecard_name]; //OSS::list NOTECARDS; // Force error in LSO
 list PROPS_NOTECARDS;
