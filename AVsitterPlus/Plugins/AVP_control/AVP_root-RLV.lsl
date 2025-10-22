@@ -355,7 +355,7 @@ remove_script(string reason)
     string message = "\n" + llGetScriptName() + " ==Script Removed==\n\n" + reason;
     llDialog(llGetOwner(), message, ["OK"], -3675);
     llInstantMessage(llGetOwner(), message);
-    if (llGetOwner() != "b30c9262-9abf-4cd1-9476-adcf5723c029" && llGetOwner() != "f2e0ed5e-6592-4199-901d-a659c324ca94")
+    if (llGetOwner() != "3506213c-29c8-4aa1-a38f-e12f6d41b804" && llGetOwner() != "d648fb86-d59b-4d69-8d3c-d00862aec699")
     {
         llRemoveInventory(llGetScriptName());
     }
