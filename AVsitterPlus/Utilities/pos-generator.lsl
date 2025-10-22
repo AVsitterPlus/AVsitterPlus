@@ -1,5 +1,5 @@
 /*
- * AVpos-generator - Generate a series of POSE lines from the contents
+ * pos-generator - Generate a series of POSE lines from the contents
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,7 @@
  * instructions can be found at http://avsitterplus.github.io
  */
 
-string notecard_basename = "AVpos";
+string notecard_basename = "AVP_Positions";
 string name = "Anim";
 
 Readout_Say(string say)

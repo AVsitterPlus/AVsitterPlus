@@ -1,6 +1,6 @@
 /******************************************************************
 * This example will change color when a BUTTON is selected.
-* Your AVpos notecard should have buttons for each color e.g.
+* Your AVP_Positions notecard should have buttons for each color e.g.
 *
 * TOMENU Colors
 * ...

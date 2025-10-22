@@ -17,7 +17,7 @@ string product = "AVmenu™";
 string version = "2.3.1";
 integer verbose = 0;
 string prop_script = "AVP_prop";
-string notecard_name = "AVpos";
+string notecard_name = "AVP_Positions";
 string main_script = "AVP_sitA";
 string custom_text;
 list MENUCONTROL_TYPES = ["ALL", "OWNER ONLY", "GROUP ONLY"];
@@ -449,7 +449,7 @@ default
         else if (msg == "[DUMP]")
         {
             Readout_Say("");
-            Readout_Say("--✄--COPY BELOW INTO \"AVpos\" NOTECARD--✄--");
+            Readout_Say("--✄--COPY BELOW INTO \"AVP_Positions\" NOTECARD--✄--");
             Readout_Say("");
             if (custom_text != "")
             {
@@ -569,7 +569,7 @@ default
             else if (num == 90021) // end of dump
             {
                 Readout_Say("");
-                Readout_Say("--✄--COPY ABOVE INTO \"AVpos\" NOTECARD--✄--");
+                Readout_Say("--✄--COPY ABOVE INTO \"AVP_Positions\" NOTECARD--✄--");
                 Readout_Say("");
             }
         }

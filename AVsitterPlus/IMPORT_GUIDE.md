@@ -6,7 +6,7 @@ If you would prefer a packaged version of the latest release, and to receive pac
 
 ## Importing the AVsitterPlus scripts into Second Life / OpenSim
 
-Quick summary: Download the scripts from the [releases page](https://github.com/AVsitterPlus/AVsitterPlus/releases); name them in the viewer the same as in the zip file but without extension, saving all of them with Mono enabled; create an AVP_helper *object*, put the AVP_helperscript *script* inside and take it; create an AVpos notecard, add something to it and save it.
+Quick summary: Download the scripts from the [releases page](https://github.com/AVsitterPlus/AVsitterPlus/releases); name them in the viewer the same as in the zip file but without extension, saving all of them with Mono enabled; create an AVP_helper *object*, put the AVP_helperscript *script* inside and take it; create an `AVP_Positions` notecard, add something to it and save it.
 
 Step-by-step guide:
 
@@ -51,8 +51,8 @@ Step-by-step guide:
 
 8. There's still one thing to do to have the distribution working:
 
-    - Create a notecard in your inventory and name it **AVpos**.
-    - Open it and write this text in it: `This notecard is empty` (any text that is not an AVpos command will work instead of that, even a space).
+    - Create a notecard in your inventory and name it **AVP_Positions**.
+    - Open it and write this text in it: `This notecard is empty` (any text that is not an AVP_Positions command will work instead of that, even a space).
     - *Save* it. This step is very important. Notecards that have never been saved after being created will cause problems.
     - Use that notecard as an empty notecard when following the user instructions below.
 

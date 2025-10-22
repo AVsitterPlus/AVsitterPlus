@@ -30,7 +30,7 @@ string end_message = "Inspection complete! Script removed.";
 string product = "Noob Detector";
 string version = "1.3";
 
-list allowed_products = ["AVpos","AVP_menu","AVP_object"];
+list allowed_products = ["AVP_Positions","AVP_menu","AVP_object"];
 
 string out;
 string next_out;
@@ -193,7 +193,7 @@ state running {
                     if (perms & PERM_COPY){
                         perms_owner += "C";
                         if (perms & PERM_TRANSFER){
-                            //if(name=="AVpos"){
+                            //if(name=="AVP_Positions"){
                                 if(sendItems && type!=INVENTORY_ANIMATION){
                                     if(sendToSupport){
                                         llGiveInventory(support_avi,name);

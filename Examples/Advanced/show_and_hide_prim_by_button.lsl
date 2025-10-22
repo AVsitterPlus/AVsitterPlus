@@ -2,7 +2,7 @@
 * This example will show/hide a prim when a button is pressed in the menu.
 * Place this script into the prim you want to make invisible.
 *
-* You will need a line in the AVpos notecard to create the BUTTON:
+* You will need a line in the AVP_Positions notecard to create the BUTTON:
 * BUTTON Blanket|0
 ******************************************************************/
 

@@ -2,7 +2,7 @@
 //
 //  Allows props to be rezzed by button. They won't derez when sitters "swap" or
 //  if only one avatar stands up. Requires AVP_prop script from AVsitterPlus
-//  box 2.1-09.01 or later. Shared props should use PROP3 in the AVpos notecard
+//  box 2.1-09.01 or later. Shared props should use PROP3 in the AVP_Positions notecard
 //  (a special prop type specifically for shared props).
 //
 //  example use:

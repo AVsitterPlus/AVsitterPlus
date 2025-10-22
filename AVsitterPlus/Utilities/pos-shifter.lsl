@@ -1,5 +1,5 @@
 /*
- * AVpos-shifter - Shifts positions and rotations of poses
+ * pos-shifter - Shifts positions and rotations of poses
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,7 +14,7 @@
  */
 
 float version = 1.2;
-string notecard_name = "AVpos";
+string notecard_name = "AVP_Positions";
 string url = "https://avsitterplus.com/settings.php"; // the settings dump service remains up for AVsitterPlus customers. settings clear periodically.
 key notecard_query;
 integer notecard_line;
@@ -77,14 +77,14 @@ cut_above_text()
     webkey = (string)llGenerateKey();
     webcount = 0;
     Readout_Say("");
-    Readout_Say("--✄--COPY BELOW INTO \"AVpos\" NOTECARD--✄--");
+    Readout_Say("--✄--COPY BELOW INTO \"AVP_Positions\" NOTECARD--✄--");
     Readout_Say("");
 }
 
 cut_below_text()
 {
     Readout_Say("");
-    Readout_Say("--✄--COPY ABOVE INTO \"AVpos\" NOTECARD--✄--");
+    Readout_Say("--✄--COPY ABOVE INTO \"AVP_Positions\" NOTECARD--✄--");
     Readout_Say("");
 }
 
@@ -100,11 +100,11 @@ Readout_Say(string say)
 
 integer check_in_root()
 {
-    if (llGetLinkNumber() > 1 || llGetInventoryType("AVpos") != INVENTORY_NOTECARD)
+    if (llGetLinkNumber() > 1 || llGetInventoryType("AVP_Positions") != INVENTORY_NOTECARD)
     {
         if (llGetInventoryCreator(llGetScriptName()) != llGetOwner())
         {
-            llOwnerSay("This script must be placed only in the root prim and with AVpos notecard! - Removing script!");
+            llOwnerSay("This script must be placed only in the root prim and with AVP_Positions notecard! - Removing script!");
             llRemoveInventory(llGetScriptName());
             return FALSE;
         }

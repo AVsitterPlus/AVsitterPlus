@@ -4,9 +4,9 @@
 //    of POSE/SYNC are playing for any avatar.
 //  - Also replaces the need for the "Rez Same Prop for Several Poses" script.
 //  - Requires AVP_prop script from AVsitterPlus box 2.1-09 or later.
-//  - Shared props should use PROP3 in the AVpos notecard (a special prop type
+//  - Shared props should use PROP3 in the AVP_Positions notecard (a special prop type
 //    specifically for shared props).
-//  - Shared props can be set up in SITTER 0 section of the AVpos notecard in a
+//  - Shared props can be set up in SITTER 0 section of the AVP_Positions notecard in a
 //    regular setup prim, or in a dedicated rezzer prim.
 //  - Props for a specific sitter can use PROP, PROP1 or PROP2.
 //  - All props referenced by this script should be named different from pose
@@ -16,7 +16,7 @@
 //    POSE/SYNC names the props are for.
 //    e.g: 0, "weights", "stand1,stand2"
 //  - SITTER with -1 indicates the prop is for all sitters (i.e. shared prop,
-//    that should use PROP3 in the AVpos notecard).
+//    that should use PROP3 in the AVP_Positions notecard).
 //    e.g: -1,"prop1", "sit1,sit2,sit3"
 //
 //  - "*" for POSE name indicates the prop should rez for all poses.

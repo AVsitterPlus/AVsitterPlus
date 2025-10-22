@@ -1,5 +1,5 @@
 /*
- * AVP_adjuster - Create a setup and an AVpos notecard from scratch
+ * AVP_adjuster - Create a setup and an AVP_Positions notecard from scratch
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,7 +22,7 @@ string prop_script = "AVP_prop";
 string expression_script = "AVP_faces";
 string camera_script = "AVP_camera";
 string main_script = "AVP_sitA";
-string notecard_name = "AVpos";
+string notecard_name = "AVP_Positions";
 list POS_LIST;
 list ROT_LIST;
 list HELPER_KEY_LIST;
@@ -450,7 +450,7 @@ default
                 else
                 {
                     Readout_Say("");
-                    Readout_Say("--✄--COPY ABOVE INTO \"AVpos\" NOTECARD--✄--");
+                    Readout_Say("--✄--COPY ABOVE INTO \"AVP_Positions\" NOTECARD--✄--");
                     Readout_Say("");
                     web(TRUE);
                     llRegionSayTo(llGetOwner(), 0, "Settings copy: " + url + "?q=" + webkey);
@@ -470,7 +470,7 @@ default
                         webkey = (string)llGenerateKey();
                         webcount = 0;
                         Readout_Say("");
-                        Readout_Say("--✄--COPY BELOW INTO \"AVpos\" NOTECARD--✄--");
+                        Readout_Say("--✄--COPY BELOW INTO \"AVP_Positions\" NOTECARD--✄--");
                         Readout_Say("");
                         Readout_Say("\"" + llToUpper(llGetObjectName()) + "\" " + strReplace(llList2String(data, 0), "V:", "AVsitterPlus "));
                         if (llList2Integer(data, 1))

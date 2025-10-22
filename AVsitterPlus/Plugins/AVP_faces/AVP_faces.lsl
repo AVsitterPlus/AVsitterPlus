@@ -43,7 +43,7 @@ integer IsInteger(string data)
 }
 
 string version = "2.3.1";
-string notecard_name = "AVpos";
+string notecard_name = "AVP_Positions";
 string main_script = "AVP_sitA";
 key key_request;
 key notecard_key;
