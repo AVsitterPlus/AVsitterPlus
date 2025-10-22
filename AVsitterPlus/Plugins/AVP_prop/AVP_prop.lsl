@@ -596,7 +596,7 @@ default
         }
         if (llList2String(data, 0) == "NAG" && HAVENTNAGGED && (!llGetAttached()))
         {
-            llRegionSayTo(llGetOwner(), 0, "To enable auto-attachments, please enable the experience '" + llList2String(data, 1) + "' by Code Violet in 'About Land'.");
+            llRegionSayTo(llGetOwner(), 0, "To enable auto-attachments, please enable the experience '" + llList2String(data, 1) + "' by Missy Restless in 'About Land'.");
             HAVENTNAGGED = FALSE;
         }
     }

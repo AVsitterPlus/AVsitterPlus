@@ -1,0 +1,47 @@
+# An example of Two SITTERs with Submenus
+# Multiple submenus in each SITTER. Note the "Laying" and "Kissing" submenus
+# in each SITTER are within the "Couples" submenu.
+
+SITTER 0
+TOMENU Singles
+TOMENU Couples
+
+MENU Singles
+POSE Sit1|animation1
+POSE Sit2|animation2
+
+MENU Couples
+TOMENU Laying
+TOMENU Kissing
+
+MENU Laying
+SYNC Lay1|couples1_Female
+SYNC Lay2|couples2_Female
+SYNC Lay3|couples3_Female
+
+MENU Kissing
+SYNC Kiss1|couples4_Female
+SYNC Kiss2|couples5_Female
+SYNC Kiss3|couples6_Female
+
+SITTER 1
+TOMENU Singles
+TOMENU Couples
+
+MENU Singles
+POSE Sit1|animation1
+POSE Sit2|animation2
+
+MENU Couples
+TOMENU Laying
+TOMENU Kissing
+
+MENU Laying
+SYNC Lay1|couples1_Male
+SYNC Lay2|couples2_Male
+SYNC Lay3|couples3_Male
+
+MENU Kissing
+SYNC Kiss1|couples4_Male
+SYNC Kiss2|couples5_Male
+SYNC Kiss3|couples6_Male
